@@ -1,9 +1,7 @@
 #ifndef LIBRO_H
-
 #define LIBRO_H
 
 #include <stdio.h>
-
 #include <string.h>
 #define MAX_NOMBRE 100
 #define MAX_AUTOR 100

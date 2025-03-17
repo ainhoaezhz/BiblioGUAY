@@ -1,4 +1,5 @@
 #include "libro.h"
+#include <stdio.h>
 
 void inicializarLibro(Libro *libro, const char *nombre, const char *autor,
 		const char *genero, int id, int estado) {

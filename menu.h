@@ -9,6 +9,8 @@
 #define MENU_H_
 
 char menuPrincipal();
+char menuRegistro();
+void iniciarSesion();
 
 
 #endif /* MENU_H_ */
