@@ -1,9 +1,3 @@
-/*
- * biblioteca.c
- *
- *  Created on: 5 mar 2025
- *      Author: Genesis
- */
 #include "biblioteca.h"
 #include <stdio.h>
 
