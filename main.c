@@ -17,15 +17,18 @@ int main() {
 //			char usuarioCorrecto[] = "admin";
 //			char contrasenaCorrecta[] = "1234";
 
-			printf("\nINICIAR SESIÓN\n");
+			printf("\nINICIAR SESION\n");
 			printf("------------------\n");
 			printf("Usuario: ");
 			scanf("Usuario: %s", usuario);
 			while (getchar() != '\n')
 				; // Limpiar el buffer de entrada
 
-			printf("Contraseña: ");
+			printf("Contrasenya: ");
+			scanf("Usuario: %s", contrasena);
+
 			//leerContrasena(contrasena);
+
 			printf("\n");
 
 //			if (strcmp(usuario, usuarioCorrecto) == 0

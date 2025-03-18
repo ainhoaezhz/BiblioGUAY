@@ -17,10 +17,10 @@ char menuPrincipal() {
     printf("BIBLIOTECA\n");
     printf("------------------\n");
     printf("Bienvenido\n");
-    printf("1. Iniciar Sesión\n");
+    printf("1. Iniciar Sesion\n");
     printf("2. Registrarse\n");
     printf("0. Salir\n");
-    printf("Elige una opción: ");
+    printf("Elige una opcion: ");
     fflush(stdout);
 
     scanf(" %c", &opcion); // Espacio antes de %c para evitar problemas con '\n'
@@ -34,8 +34,8 @@ char menuRegistro() {
     printf("Tipo de usuario: \n");
     printf("1. Administrador\n");
     printf("2. Usuario Normal\n");
-    printf("0. Volver al menú principal\n");
-    printf("Elige una opción: ");
+    printf("0. Volver al menu principal\n");
+    printf("Elige una opcion: ");
     fflush(stdout);
 
     scanf(" %c", &opcionRegistro);
