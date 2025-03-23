@@ -25,9 +25,9 @@ int main() {
 				; // Limpiar el buffer de entrada
 
 			printf("Contrasenya: ");
-			scanf("Usuario: %s", contrasena);
+			scanf("Contrasenya: %s", contrasena);
 
-			//leerContrasena(contrasena);
+			leerContrasena(contrasena);
 
 			printf("\n");
 

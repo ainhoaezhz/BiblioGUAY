@@ -11,6 +11,7 @@
 char menuPrincipal();
 char menuRegistro();
 void iniciarSesion();
+void leerContrasena(char *password)
 
 
 #endif /* MENU_H_ */

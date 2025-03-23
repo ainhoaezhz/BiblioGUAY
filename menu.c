@@ -11,7 +11,6 @@
 
 #define MAX 30  // Tamaño máximo para username y password
 
-void leerContrasenia(char* password);
 char menuPrincipal() {
     char opcion;
     printf("BIBLIOTECA\n");
@@ -46,7 +45,7 @@ char menuRegistro() {
 
 
 // Función para leer la contraseña sin mostrar caracteres en pantalla
-void leerContrasena(char *password) {
+void leerContrasena(char* password) {
     int i = 0;
     char ch;
 
