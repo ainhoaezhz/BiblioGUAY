@@ -27,7 +27,7 @@ int main() {
 			printf("Contrasenya: ");
 			scanf("Contrasenya: %s", contrasena);
 
-			leerContrasena(contrasena);
+			//leerContrasena(contrasena);
 
 			printf("\n");
 
