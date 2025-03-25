@@ -12,23 +12,7 @@ int main() {
 		opcion = menuPrincipal();
 		switch (opcion) {
 		case '1': {
-		    char usuario[MAX], contrasena[MAX];
-
-		    printf("\nINICIAR SESION\n");
-		    printf("---\n");
-		    printf("Usuario: ");
-		    fflush(stdout);
-		    scanf("%s", usuario);
-		    while (getchar() != '\n'); // Limpiar el buffer de entrada
-
-		    printf("Contrasenya: ");
-		    fflush(stdout);
-		    scanf("%s", contrasena);
-		    while (getchar() != '\n'); // Limpiar el buffer de entrada
-
-		    printf("\n");
-
-		    // Aquí iría la verificación de credenciales
+			iniciarSesion();
 		    break;
 		}
 		case '2': {

@@ -17,6 +17,7 @@
      char direccion[MAX_STR];
      char email[MAX_STR];
      char telefono[MAX_STR];
+     char contrasena[MAX_STR];  // Agregado para almacenar la contraseña
  } Usuario;
  
  void inicializarUsuario(Usuario *u, const char *nombre, const char

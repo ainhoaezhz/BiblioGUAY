@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "usuario.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -8,9 +9,59 @@
 #include <termios.h> // Para Linux/Mac
 #include <unistd.h>
 #endif
-#include "usuario.h"
 
 #define MAX 30 // Tamaño máximo para username y password
+#define MAX_STR 100 // Tamaño máximo para strings largos como nombre, apellidos, etc.
+
+// Función para leer la contraseña y mostrar asteriscos
+void leerContrasena(char* password) {
+    int i = 0;
+    char ch;
+
+    #ifdef _WIN32
+    while (1) {
+        ch = _getch();  // Lee un carácter sin mostrarlo
+        if (ch == '\r' || ch == '\n') {  // Si es Enter
+            password[i] = '\0';  // Termina la cadena
+            break;
+        } else if (ch == 8 || ch == 127) {  // Manejo de retroceso
+            if (i > 0) {
+                i--;
+                printf("\b \b");  // Borra el último carácter
+            }
+        } else if (i < MAX - 1) {
+            password[i++] = ch;
+            printf("*");  // Muestra un asterisco
+        }
+    }
+    #else
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);  // Obtener la configuración actual
+    newt = oldt;
+    newt.c_lflag &= ~ECHO;  // Desactiva el eco
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Aplicar nueva configuración
+
+    while (1) {
+        ch = getchar();  // Leer un carácter sin mostrarlo
+        if (ch == '\n' || ch == '\r') {  // Si es Enter
+            password[i] = '\0';  // Termina la cadena
+            break;
+        } else if (ch == 8 || ch == 127) {  // Manejo de retroceso
+            if (i > 0) {
+                i--;
+                printf("\b \b");  // Borra el último carácter
+            }
+        } else if (i < MAX - 1) {
+            password[i++] = ch;
+            printf("*");  // Muestra un asterisco
+        }
+    }
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  // Restaurar la configuración original
+    #endif
+
+    printf("\n");
+}
 
 char menuPrincipal() {
     char opcion;
@@ -47,44 +98,25 @@ char menuRegistro() {
     return opcionRegistro;
 }
 
-// Función para leer la contraseña sin mostrar caracteres en pantalla
-void leerContrasena(char* password) {
-    int i = 0;
-    char ch;
-    
-    while (1) {
-        #ifdef _WIN32
-        ch = getch(); // Windows
-        #else
-        struct termios oldt, newt;
-        tcgetattr(STDIN_FILENO, &oldt);
-        newt = oldt;
-        newt.c_lflag &= ~ECHO; // Desactiva la impresión de caracteres
-        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-        ch = getchar();
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restaura la configuración
-        #endif
-        
-        if (ch == '\n' || ch == '\r') {
-            password[i] = '\0'; // Finaliza la cadena
-            break;
-        } else if (ch == 8 || ch == 127) { // Manejo de backspace
-            if (i > 0) {
-                i--;
-                printf("\b \b"); // Borra el último carácter en pantalla
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*"); // Muestra asterisco en pantalla
-        }
-    }
-}
-
 // Función para iniciar sesión
 void iniciarSesion() {
-    // Implementación pendiente
+    char usuario[MAX], contrasena[MAX];
+
+    printf("\nINICIAR SESION\n");
+    printf("---\n");
+    printf("Usuario: ");
+    fflush(stdout);
+    scanf("%s", usuario);
+    while (getchar() != '\n'); // Limpiar el buffer de entrada
+
+    printf("Contrasena: ");
+    leerContrasena(contrasena);  // Usamos la función que lee la contraseña con asteriscos
+    while (getchar() != '\n'); // Limpiar el buffer de entrada
+
+    printf("\n");
 }
 
+// Función para registrar un nuevo usuario
 void registrarse() {
     Usuario nuevoUsuario;
     FILE *archivo = fopen("usuarios.txt", "a");
@@ -120,14 +152,19 @@ void registrarse() {
     fgets(nuevoUsuario.telefono, MAX_STR, stdin);
     strtok(nuevoUsuario.telefono, "\n");
     
+    // Solicitar la contraseña con asteriscos
+    printf("Contraseña: ");
+    leerContrasena(nuevoUsuario.contrasena);
+    
     // Guardar datos en el archivo
-    fprintf(archivo, "%s|%s|%s|%s|%s|%s\n", 
+    fprintf(archivo, "%s|%s|%s|%s|%s|%s|%s\n", 
             nuevoUsuario.nombre,
             nuevoUsuario.apellidos, 
             nuevoUsuario.dni, 
             nuevoUsuario.direccion,
             nuevoUsuario.email, 
-            nuevoUsuario.telefono);
+            nuevoUsuario.telefono,
+            nuevoUsuario.contrasena);
     
     fclose(archivo);
     
