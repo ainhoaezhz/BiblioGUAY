@@ -12,35 +12,25 @@ int main() {
 		opcion = menuPrincipal();
 		switch (opcion) {
 		case '1': {
+		    char usuario[MAX], contrasena[MAX];
 
-			char usuario[MAX], contrasena[MAX];
-//			char usuarioCorrecto[] = "admin";
-//			char contrasenaCorrecta[] = "1234";
+		    printf("\nINICIAR SESION\n");
+		    printf("---\n");
+		    printf("Usuario: ");
+		    fflush(stdout);
+		    scanf("%s", usuario);
+		    while (getchar() != '\n'); // Limpiar el buffer de entrada
 
-			printf("\nINICIAR SESION\n");
-			printf("------------------\n");
-			printf("Usuario: ");
-			scanf("Usuario: %s", usuario);
-			while (getchar() != '\n')
-				; // Limpiar el buffer de entrada
+		    printf("Contrasenya: ");
+		    fflush(stdout);
+		    scanf("%s", contrasena);
+		    while (getchar() != '\n'); // Limpiar el buffer de entrada
 
-			printf("Contrasenya: ");
-			scanf("Contrasenya: %s", contrasena);
+		    printf("\n");
 
-			//leerContrasena(contrasena);
-
-			printf("\n");
-
-//			if (strcmp(usuario, usuarioCorrecto) == 0
-//					&& strcmp(contrasena, contrasenaCorrecta) == 0) {
-//				printf("Inicio de sesión exitoso!\n");
-//			} else {
-//				printf("Error: Usuario o contraseña incorrectos.\n");
-//			}
-			// iniciarSesion();
-			break;
+		    // Aquí iría la verificación de credenciales
+		    break;
 		}
-
 		case '2': {
 			char opcionRegistro;
 			do {
