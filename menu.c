@@ -101,19 +101,53 @@ char menuRegistro() {
 // Función para iniciar sesión
 void iniciarSesion() {
     char usuario[MAX], contrasena[MAX];
+    FILE *archivo = fopen("usuarios.txt", "r");
+    
+    if (archivo == NULL) {
+        printf("Error: No hay usuarios registrados.\n");
+        return;
+    }
 
     printf("\nINICIAR SESION\n");
     printf("---\n");
     printf("Usuario: ");
-    fflush(stdout);
-    scanf("%s", usuario);
-    while (getchar() != '\n'); // Limpiar el buffer de entrada
+    scanf("%29s", usuario);  // Limita la lectura para evitar desbordamiento
+    while (getchar() != '\n');
 
     printf("Contrasena: ");
-    leerContrasena(contrasena);  // Usamos la función que lee la contraseña con asteriscos
-    while (getchar() != '\n'); // Limpiar el buffer de entrada
+    leerContrasena(contrasena);
+    while (getchar() != '\n');
 
-    printf("\n");
+    // Verificar credenciales en el archivo
+    char linea[MAX_STR * 7];  // Ajusta según el tamaño máximo de una línea
+    int encontrado = 0;
+    
+    while (fgets(linea, sizeof(linea), archivo)) {
+        char *token = strtok(linea, "|");
+        char *campos[7];  // Para almacenar los campos del usuario (nombre, apellidos, dni, etc.)
+        int i = 0;
+        
+        while (token != NULL && i < 7) {
+            campos[i++] = token;
+            token = strtok(NULL, "|");
+        }
+        
+        // Comparar usuario y contraseña (asumiendo que el email es el "usuario")
+        if (strcmp(campos[4], usuario) == 0 && strcmp(campos[6], contrasena) == 0) {
+            encontrado = 1;
+            break;
+        }
+    }
+    
+    fclose(archivo);
+    
+    if (encontrado) {
+        printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+        // Aquí podrías llamar a un menú de usuario/administrador
+        // Ej: menuUsuario();
+    } else {
+        printf("\nError: Usuario o contraseña incorrectos.\n");
+    }
 }
 
 // Función para registrar un nuevo usuario
