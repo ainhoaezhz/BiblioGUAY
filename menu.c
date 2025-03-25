@@ -111,10 +111,12 @@ void iniciarSesion() {
     printf("\nINICIAR SESION\n");
     printf("---\n");
     printf("Usuario: ");
+    fflush(stdout);
     scanf("%29s", usuario);  // Limita la lectura para evitar desbordamiento
     while (getchar() != '\n');
 
     printf("Contrasena: ");
+    fflush(stdout);
     leerContrasena(contrasena);
     while (getchar() != '\n');
 

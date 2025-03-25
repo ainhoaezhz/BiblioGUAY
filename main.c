@@ -1,19 +1,29 @@
 #include "biblioteca.h"
 #include "menu.h"
 #include "libro.h"
+#include "sqlite3.h"
+#include "bd.h"
 
 #include <stdio.h>
 #define MAX 30
 
 int main() {
 	char opcion;
+	sqlite3 *db;
+
+	if (inicializarBD(&db) != SQLITE_OK) {
+		printf("Error al abrir la base de datos\n");
+		return 1;
+	}
+
+	creartablas(db);
 
 	do {
 		opcion = menuPrincipal();
 		switch (opcion) {
 		case '1': {
 			iniciarSesion();
-		    break;
+			break;
 		}
 		case '2': {
 			char opcionRegistro;
@@ -50,6 +60,7 @@ int main() {
 			fflush(stdout);
 		}
 	} while (opcion != '0');
+	sqlite3_close(db);
 
 	return 0;
 }
