@@ -11,6 +11,7 @@
 char menuPrincipal();
 char menuRegistro();
 void iniciarSesion();
+void registrarse();
 //void leerContrasena(char *password)
 
 
