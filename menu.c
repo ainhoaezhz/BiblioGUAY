@@ -100,7 +100,7 @@ char menuRegistro() {
 
 // Función para iniciar sesión
 void iniciarSesion() {
-    char usuario[MAX], contrasena[MAX];
+    char usuario[MAX], contrasena[MAX], opcionMenu;
     FILE *archivo = fopen("usuarios.txt", "r");
     
     if (archivo == NULL) {
@@ -122,7 +122,7 @@ void iniciarSesion() {
 
     // Verificar credenciales en el archivo
     char linea[MAX_STR * 7];  // Ajusta según el tamaño máximo de una línea
-    int encontrado = 0;
+    int encontrado = 1;
     
     while (fgets(linea, sizeof(linea), archivo)) {
         char *token = strtok(linea, "|");
@@ -140,18 +140,60 @@ void iniciarSesion() {
             break;
         }
     }
-    
+
     fclose(archivo);
-    
+
     if (encontrado) {
-        printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
-        // Aquí podrías llamar a un menú de usuario/administrador
-        // Ej: menuUsuario();
-    } else {
-        printf("\nError: Usuario o contraseña incorrectos.\n");
+    	do {
+    		printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+    		opcionMenu = menuUsuario();
+    		switch (opcionMenu) {
+    		case '1':
+    			printf("Viendo perfil...\n");
+    			fflush(stdout);
+    			break;
+    		case '2':
+    			printf("Editando perfil...\n");
+    			fflush(stdout);
+    			break;
+    		case '3':
+    			printf("Buscando libros...\n");
+    			fflush(stdout);
+    			break;
+    		case '4':
+    		    printf("Historial de prestamos...\n");
+    		    fflush(stdout);
+    		    break;
+    		case '5':
+    		    printf("Devolviendo libros...\n");
+    		    fflush(stdout);
+    		    break;
+    		default:
+    			printf("ERROR! Opción incorrecta\n");
+    			fflush(stdout);
+    		}
+    	} while(opcionMenu != 0);
     }
 }
+char menuUsuario() {
+	char opcionMenu;
+	printf("----------\n");
+	printf("USUARIO: MENU\n");
+	printf("1. Ver perfil\n");
+	printf("2. Editar perfil\n");
+	printf("3. Buscar libros\n");
+	printf("4. Historial de prestamos\n");
+	printf("5. Devolver libros\n");
+	printf("0. Salir\n");
+	printf("Elige una opcion: ");
+	fflush(stdout);
 
+	scanf(" %c", &opcionMenu);
+
+	while (getchar() != '\n');
+
+	return opcionMenu;
+}
 // Función para registrar un nuevo usuario
 void registrarse() {
     Usuario nuevoUsuario;
