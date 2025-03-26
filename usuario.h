@@ -26,7 +26,7 @@
                           const char *telefono, const char *contrasena, int es_Admin);
 
  void mostrarUsuario(const Usuario *u);
- 
+ void editarUsuario(Usuario *u);
  
  
  

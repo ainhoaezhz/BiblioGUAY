@@ -146,14 +146,19 @@ void iniciarSesion() {
     if (encontrado) {
     	do {
     		printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+    		Usuario usuarioActual;
+    		//CARGAR USUARIO DESDE LA BD
     		opcionMenu = menuUsuario();
     		switch (opcionMenu) {
     		case '1':
     			printf("Viendo perfil...\n");
+    			mostrarUsuario(&usuarioActual);
     			fflush(stdout);
     			break;
     		case '2':
     			printf("Editando perfil...\n");
+    			editarUsuario(&usuarioActual);
+    			//Guardar cambios en la BD
     			fflush(stdout);
     			break;
     		case '3':
