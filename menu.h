@@ -13,7 +13,7 @@ char menuRegistro();
 void iniciarSesion();
 void registrarse();
 char menuUsuario();
-//void leerContrasena(char *password)
+void leerContrasena(char *password);
 
 
 #endif /* MENU_H_ */

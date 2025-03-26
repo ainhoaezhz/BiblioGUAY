@@ -2,6 +2,7 @@
 #include "usuario.h"
 #include <stdio.h>
 #include <string.h>
+#include <sqlite3.h>
 
 #ifdef _WIN32
 #include <conio.h> // Para Windows (ocultar contraseña)
@@ -200,56 +201,42 @@ char menuUsuario() {
 	return opcionMenu;
 }
 // Función para registrar un nuevo usuario
-void registrarse() {
+
+void registrarse(sqlite3 *db) {
     Usuario nuevoUsuario;
-    FILE *archivo = fopen("usuarios.txt", "a");
-    
-    if (archivo == NULL) {
-        printf("Error al abrir el archivo de usuarios.\n");
-        return;
-    }
-    
     printf("\nREGISTRO DE USUARIO\n");
-    printf("---------------------\n");
-    printf("Nombre del usuario: ");
-    fgets(nuevoUsuario.nombre, MAX_STR, stdin);
-    strtok(nuevoUsuario.nombre, "\n");
-    
+    printf("----------------------\n");
+
+    printf("Nombre: ");
+    scanf("%99s", nuevoUsuario.nombre);
+    while (getchar() != '\n');
+
     printf("Apellidos: ");
-    fgets(nuevoUsuario.apellidos, MAX_STR, stdin);
-    strtok(nuevoUsuario.apellidos, "\n");
-    
+    scanf("%99s", nuevoUsuario.apellidos);
+    while (getchar() != '\n');
+
     printf("DNI: ");
-    fgets(nuevoUsuario.dni, MAX_STR, stdin);
-    strtok(nuevoUsuario.dni, "\n");
-    
-    printf("Dirección: ");
-    fgets(nuevoUsuario.direccion, MAX_STR, stdin);
-    strtok(nuevoUsuario.direccion, "\n");
-    
+    scanf("%19s", nuevoUsuario.dni);
+    while (getchar() != '\n');
+
+    printf("Direccion: ");
+    scanf("%99s", nuevoUsuario.direccion);
+    while (getchar() != '\n');
+
     printf("Email: ");
-    fgets(nuevoUsuario.email, MAX_STR, stdin);
-    strtok(nuevoUsuario.email, "\n");
-    
-    printf("Teléfono: ");
-    fgets(nuevoUsuario.telefono, MAX_STR, stdin);
-    strtok(nuevoUsuario.telefono, "\n");
-    
-    // Solicitar la contraseña con asteriscos
+    scanf("%99s", nuevoUsuario.email);
+    while (getchar() != '\n');
+
+    printf("Telefono: ");
+    scanf("%14s", nuevoUsuario.telefono);
+    while (getchar() != '\n');
+
     printf("Contraseña: ");
     leerContrasena(nuevoUsuario.contrasena);
-    
-    // Guardar datos en el archivo
-    fprintf(archivo, "%s|%s|%s|%s|%s|%s|%s\n", 
-            nuevoUsuario.nombre,
-            nuevoUsuario.apellidos, 
-            nuevoUsuario.dni, 
-            nuevoUsuario.direccion,
-            nuevoUsuario.email, 
-            nuevoUsuario.telefono,
-            nuevoUsuario.contrasena);
-    
-    fclose(archivo);
-    
-    printf("¡El usuario se ha registrado con éxito!\n");
+
+    printf("\u00bfEs administrador? (1: S\u00ed, 0: No): ");
+    scanf("%d", &nuevoUsuario.es_Admin);
+    while (getchar() != '\n');
+    printf("Usuario registrado exitosamente\n");
 }
+

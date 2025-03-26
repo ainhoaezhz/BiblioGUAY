@@ -6,6 +6,7 @@
  */
 
 #include "usuario.h"
+#include "menu.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -22,9 +23,8 @@ void inicializarUsuario(Usuario *u, const char *nombre, const char *apellidos,
     u->es_Admin = es_Admin;
 }
 
-
 void mostrarUsuario(const Usuario *u) {
-	printf("\n--- TU PERFIL ---\n");
+    printf("\n--- TU PERFIL ---\n");
     printf("Nombre: %s\n", u->nombre);
     printf("Apellidos: %s\n", u->apellidos);
     printf("DNI: %s\n", u->dni);
@@ -60,48 +60,48 @@ void editarUsuario(Usuario *u) {
                 fgets(temp, MAX_STR, stdin);
                 strtok(temp, "\n");
                 strncpy(u->nombre, temp, MAX_STR);
-                printf("Nombre cambiado correctamente.");
+                printf("Nombre cambiado correctamente.\n");
                 break;
             case '2':
                 printf("Nuevos apellidos: ");
                 fgets(temp, MAX_STR, stdin);
                 strtok(temp, "\n");
                 strncpy(u->apellidos, temp, MAX_STR);
-                printf("Apellidos cambiados correctamente.");
+                printf("Apellidos cambiados correctamente.\n");
                 break;
             case '3':
                 printf("Nuevo DNI: ");
                 fgets(temp, MAX_STR, stdin);
                 strtok(temp, "\n");
                 strncpy(u->dni, temp, MAX_STR);
-                printf("DNI cambiado correctamente.");
+                printf("DNI cambiado correctamente.\n");
                 break;
             case '4':
                 printf("Nueva dirección: ");
                 fgets(temp, MAX_STR, stdin);
                 strtok(temp, "\n");
                 strncpy(u->direccion, temp, MAX_STR);
-                printf("Dirección cambiada correctamente.");
+                printf("Dirección cambiada correctamente.\n");
                 break;
             case '5':
                 printf("Nuevo email: ");
                 fgets(temp, MAX_STR, stdin);
                 strtok(temp, "\n");
                 strncpy(u->email, temp, MAX_STR);
-                printf("Email cambiado correctamente.");
+                printf("Email cambiado correctamente.\n");
                 break;
             case '6':
                 printf("Nuevo teléfono: ");
                 fgets(temp, MAX_STR, stdin);
                 strtok(temp, "\n");
                 strncpy(u->telefono, temp, MAX_STR);
-                printf("Teléfono cambiado correctamente.");
+                printf("Teléfono cambiado correctamente.\n");
                 break;
             case '7':
                 printf("Nueva contraseña: ");
                 leerContrasena(temp);
                 strncpy(u->contrasena, temp, MAX_STR);
-                printf("Contraseña cambiada correctamente.");
+                printf("Contraseña cambiada correctamente.\n");
                 break;
             case '0':
                 printf("Volviendo al menú anterior...\n");

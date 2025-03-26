@@ -4,24 +4,33 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../bd.c \
 ../biblioteca.c \
 ../libro.c \
 ../main.c \
 ../menu.c \
+../registro.c \
+../sqlite3.c \
 ../usuario.c 
 
 C_DEPS += \
+./bd.d \
 ./biblioteca.d \
 ./libro.d \
 ./main.d \
 ./menu.d \
+./registro.d \
+./sqlite3.d \
 ./usuario.d 
 
 OBJS += \
+./bd.o \
 ./biblioteca.o \
 ./libro.o \
 ./main.o \
 ./menu.o \
+./registro.o \
+./sqlite3.o \
 ./usuario.o 
 
 
@@ -37,7 +46,7 @@ OBJS += \
 clean: clean--2e-
 
 clean--2e-:
-	-$(RM) ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./usuario.d ./usuario.o
+	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./registro.d ./registro.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
 
 .PHONY: clean--2e-
 
