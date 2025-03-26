@@ -8,7 +8,7 @@ int inicializarBD(sqlite3 **db) {
 	return result;
 }
 
-void creartablas(sqlite3 **db) {
+void crearTablas(sqlite3 *db) {
 	sqlite3_stmt *stmt;
 	    char sql[256];  // Tamaño suficiente para almacenar cada consulta
 

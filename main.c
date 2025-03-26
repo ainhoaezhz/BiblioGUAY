@@ -16,7 +16,7 @@ int main() {
 		return 1;
 	}
 
-	creartablas(db);
+	crearTablas(db);
 
 	do {
 		opcion = menuPrincipal();
