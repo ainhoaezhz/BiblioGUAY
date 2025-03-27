@@ -1,1 +1,0 @@
-registro.o: ../registro.c

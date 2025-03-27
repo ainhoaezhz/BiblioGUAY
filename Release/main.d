@@ -1,12 +1,9 @@
-main.o: ../main.c ../biblioteca.h ../menu.h ../libro.h ../sqlite3.h \
-  ../bd.h
-
-../biblioteca.h:
+main.o: ../main.c ../menu.h ../sqlite3.h ../usuario.h ../bd.h
 
 ../menu.h:
 
-../libro.h:
-
 ../sqlite3.h:
+
+../usuario.h:
 
 ../bd.h:
