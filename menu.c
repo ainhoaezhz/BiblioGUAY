@@ -19,7 +19,6 @@ void leerContrasena(char* password) {
     int i = 0;
     char ch;
 
-    #ifdef _WIN32
     while (1) {
         ch = _getch();  // Lee un carácter sin mostrarlo
         if (ch == '\r' || ch == '\n') {  // Si es Enter
@@ -35,33 +34,6 @@ void leerContrasena(char* password) {
             printf("*");  // Muestra un asterisco
         }
     }
-    #else
-    struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);  // Obtener la configuración actual
-    newt = oldt;
-    newt.c_lflag &= ~ECHO;  // Desactiva el eco
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Aplicar nueva configuración
-
-    while (1) {
-        ch = getchar();  // Leer un carácter sin mostrarlo
-        if (ch == '\n' || ch == '\r') {  // Si es Enter
-            password[i] = '\0';  // Termina la cadena
-            break;
-        } else if (ch == 8 || ch == 127) {  // Manejo de retroceso
-            if (i > 0) {
-                i--;
-                printf("\b \b");  // Borra el último carácter
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*");  // Muestra un asterisco
-        }
-    }
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  // Restaurar la configuración original
-    #endif
-
-    printf("\n");
 }
 
 char menuPrincipal() {
@@ -120,6 +92,9 @@ void iniciarSesion() {
     fflush(stdout);
     leerContrasena(contrasena);
     while (getchar() != '\n');
+
+    menuUsuario();
+
 
     // Verificar credenciales en el archivo
     char linea[MAX_STR * 7];  // Ajusta según el tamaño máximo de una línea

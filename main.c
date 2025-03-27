@@ -23,6 +23,7 @@ int main() {
 		switch (opcion) {
 		case '1': {
 			iniciarSesion();
+			menuUsuario();
 			break;
 		}
 		case '2': {
