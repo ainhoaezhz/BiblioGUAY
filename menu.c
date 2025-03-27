@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "sqlite3.h"
+#include "bd.h"
 
 #ifdef _WIN32
 #include <conio.h> // Para Windows (ocultar contraseña)
@@ -11,31 +12,36 @@
 #include <unistd.h>
 #endif
 
-#define MAX 30 // Tamaño máximo para username y password
+
+#define MAX 80 // Tamaño máximo para username y password
 #define MAX_STR 100 // Tamaño máximo para strings largos como nombre, apellidos, etc.
 
+
+
+
+
 // Función para leer la contraseña y mostrar asteriscos
 // Función para leer la contraseña y mostrar asteriscos
-void leerContrasena(char* password) {
-    int i = 0;
-    char ch;
+void leerContrasena(char *password) {
+	int i = 0;
+	char ch;
 
 #ifdef _WIN32
-    while (1) {
-        ch = _getch();  // Lee un carácter sin mostrarlo
-        if (ch == '\r' || ch == '\n') {  // Si es Enter
-            password[i] = '\0';
-            break;
-        } else if (ch == 8 || ch == 127) {  // Manejo de retroceso
-            if (i > 0) {
-                i--;
-                printf("\b \b");
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*");
-        }
-    }
+	while (1) {
+		ch = _getch();  // Lee un carácter sin mostrarlo
+		if (ch == '\r' || ch == '\n') {  // Si es Enter
+			password[i] = '\0';
+			break;
+		} else if (ch == 8 || ch == 127) {  // Manejo de retroceso
+			if (i > 0) {
+				i--;
+				printf("\b \b");
+			}
+		} else if (i < MAX - 1) {
+			password[i++] = ch;
+			printf("*");
+		}
+	}
 #else
     struct termios oldt, newt;
     tcgetattr(STDIN_FILENO, &oldt); // Obtener atributos actuales del terminal
@@ -63,88 +69,103 @@ void leerContrasena(char* password) {
 #endif
 }
 
-
 char menuPrincipal() {
-    char opcion;
-    
-    printf("BIBLIOTECA\n");
-    printf("------------------\n");
-    printf("Bienvenido\n");
-    printf("1. Iniciar Sesion\n");
-    printf("2. Registrarse\n");
-    printf("0. Salir\n");
-    printf("Elige una opcion: ");
-    fflush(stdout);
-    
-    scanf(" %c", &opcion); // Espacio antes de %c para evitar problemas con '\n'
-    while (getchar() != '\n'); // Limpiar el buffer de entrada
-    
-    return opcion;
+	char opcion;
+
+	printf("BIBLIOTECA\n");
+	printf("------------------\n");
+	printf("Bienvenido\n");
+	printf("1. Iniciar Sesion\n");
+	printf("2. Registrarse\n");
+	printf("0. Salir\n");
+	printf("Elige una opcion: ");
+	fflush(stdout);
+
+	scanf(" %c", &opcion); // Espacio antes de %c para evitar problemas con '\n'
+	while (getchar() != '\n')
+		; // Limpiar el buffer de entrada
+
+	return opcion;
 }
 
 char menuRegistro() {
-    char opcionRegistro;
-    
-    printf("REGISTRO DE USUARIO\n");
-    printf("Tipo de usuario: \n");
-    printf("1. Administrador\n");
-    printf("2. Usuario Normal\n");
-    printf("0. Volver al menu principal\n");
-    printf("Elige una opcion: ");
-    fflush(stdout);
-    
-    scanf(" %c", &opcionRegistro);
-    while (getchar() != '\n'); // Limpiar buffer de entrada
-    
-    return opcionRegistro;
+	char opcionRegistro;
+
+	printf("REGISTRO DE USUARIO\n");
+	printf("Tipo de usuario: \n");
+	printf("1. Administrador\n");
+	printf("2. Usuario Normal\n");
+	printf("0. Volver al menu principal\n");
+	printf("Elige una opcion: ");
+	fflush(stdout);
+
+	scanf(" %c", &opcionRegistro);
+	while (getchar() != '\n')
+		; // Limpiar buffer de entrada
+
+	return opcionRegistro;
 }
 
-// Función para iniciar sesión
 void iniciarSesion() {
-    char usuario[MAX], contrasena[MAX];
+	char usuario[MAX], contrasena[MAX];
 
-    printf("\nINICIAR SESIÓN\n");
-    printf("--------------\n");
-    printf("Usuario: ");
-    fflush(stdout);
-    scanf("%29s", usuario);
-    while (getchar() != '\n');
+	do {
+		printf("\nINICIAR SESIÓN\n");
+		printf("--------------\n");
+		printf("Usuario: ");
+		fflush(stdout);
+		scanf("%29s", usuario);
+		while (getchar() != '\n')
+			;
 
-    printf("Contraseña: ");
-    fflush(stdout);
-    //leerContrasena(contrasena);
+		printf("Contraseña: ");
+		fflush(stdout);
+		scanf("%99s", contrasena);
+		//leerContrasena(contrasena);
 
-    while (getchar() != '\n');
-    printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+		while (getchar() != '\n');
 
 
-    char opcionMenu;
-    do {
-        opcionMenu = menuUsuario();
-        switch (opcionMenu) {
-                   case '1':
-                       printf("Viendo perfil...\n");
-                       break;
-                   case '2':
-                       printf("Editando perfil...\n");
-                       break;
-                   case '3':
-                       printf("Buscando libros...\n");
-                       break;
-                   case '4':
-                       printf("Historial de préstamos...\n");
-                       break;
-                   case '5':
-                       printf("Devolviendo libros...\n");
-                       break;
-                   case '0':
-                       printf("Saliendo...\n");
-                       break;
-                   default:
-                       printf("ERROR! Opción incorrecta\n");
-               }
-               printf("\n");
-    } while (opcionMenu != '0');
+		if (verificarSesion(db, usuario, contrasena)) {
+			printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+			break; // Salir del bucle si la autenticación es correcta
+		} else {
+			printf(
+					"\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
+		}
+	} while (1); // Bucle hasta que las credenciales sean correctas´
+
+
+
+
+
+	char opcionMenu;
+	do {
+		opcionMenu = menuUsuario();
+		switch (opcionMenu) {
+		case '1':
+			printf("Viendo perfil...\n");
+			break;
+		case '2':
+			printf("Editando perfil...\n");
+			break;
+		case '3':
+			printf("Buscando libros...\n");
+			break;
+		case '4':
+			printf("Historial de préstamos...\n");
+			break;
+		case '5':
+			printf("Devolviendo libros...\n");
+			break;
+		case '0':
+			printf("Saliendo...\n");
+			break;
+		default:
+			printf("ERROR! Opción incorrecta\n");
+		}
+		printf("\n");
+	} while (opcionMenu != '0');
 }
 
 char menuUsuario() {
@@ -162,47 +183,80 @@ char menuUsuario() {
 
 	scanf(" %c", &opcionMenu);
 
-	while (getchar() != '\n');
+	while (getchar() != '\n')
+		;
 
 	return opcionMenu;
 }
 // Función para registrar un nuevo usuario
 
 void registrarse(sqlite3 *db) {
-    Usuario nuevoUsuario;
-    printf("\nREGISTRO DE USUARIO\n");
-    printf("----------------------\n");
+	Usuario nuevoUsuario;
+	printf("\nREGISTRO DE USUARIO\n");
+	printf("----------------------\n");
 
-    printf("Nombre: ");
-    scanf("%99s", nuevoUsuario.nombre);
-    while (getchar() != '\n');
+	printf("Nombre: ");
+	scanf("%99s", nuevoUsuario.nombre);
+	while (getchar() != '\n')
+		;
 
-    printf("Apellidos: ");
-    scanf("%99s", nuevoUsuario.apellidos);
-    while (getchar() != '\n');
+	printf("Apellidos: ");
+	scanf("%99s", nuevoUsuario.apellidos);
+	while (getchar() != '\n')
+		;
 
-    printf("DNI: ");
-    scanf("%19s", nuevoUsuario.dni);
-    while (getchar() != '\n');
+	printf("DNI: ");
+	scanf("%19s", nuevoUsuario.dni);
+	while (getchar() != '\n')
+		;
 
-    printf("Direccion: ");
-    scanf("%99s", nuevoUsuario.direccion);
-    while (getchar() != '\n');
+	printf("Direccion: ");
+	scanf("%99s", nuevoUsuario.direccion);
+	while (getchar() != '\n')
+		;
 
-    printf("Email: ");
-    scanf("%99s", nuevoUsuario.email);
-    while (getchar() != '\n');
+	printf("Email: ");
+	scanf("%99s", nuevoUsuario.email);
+	while (getchar() != '\n')
+		;
 
-    printf("Telefono: ");
-    scanf("%14s", nuevoUsuario.telefono);
-    while (getchar() != '\n');
+	printf("Telefono: ");
+	scanf("%14s", nuevoUsuario.telefono);
+	while (getchar() != '\n')
+		;
 
-    printf("Contraseña: ");
-    leerContrasena(nuevoUsuario.contrasena);
+	printf("Contraseña: ");
+	leerContrasena(nuevoUsuario.contrasena);
 
-    printf("\u00bfEs administrador? (1: S\u00ed, 0: No): ");
-    scanf("%d", &nuevoUsuario.es_Admin);
-    while (getchar() != '\n');
-    printf("Usuario registrado exitosamente\n");
+	printf("\u00bfEs administrador? (1: S\u00ed, 0: No): ");
+	scanf("%d", &nuevoUsuario.es_Admin);
+	while (getchar() != '\n')
+		;
+	printf("Usuario registrado exitosamente\n");
 }
 
+int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
+	sqlite3_stmt *stmt;
+	char sql[MAX];
+
+	snprintf(sql, sizeof(sql),
+			"SELECT 1 FROM Usuario WHERE nombre = ? AND contrasena = ?;");
+	printf("Consulta SQL: %s\n", sql);  // Agregar depuración aquí
+
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar la consulta: %s\n",
+				sqlite3_errmsg(db));
+		return 0;
+	}
+
+	// Bind de los parámetros
+	sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, contrasena, -1, SQLITE_STATIC);
+
+	// Ejecutar consulta
+	int autenticado = (sqlite3_step(stmt) == SQLITE_ROW); // Devuelve 1 si encuentra una coincidencia
+
+	sqlite3_finalize(stmt); // Liberar recursos
+	return autenticado;
+
+}

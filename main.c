@@ -6,10 +6,11 @@
 
 #include <stdio.h>
 #define MAX 30
+sqlite3 *db = NULL;
 
 int main() {
 	char opcion;
-	sqlite3 *db;
+
 
 	if (inicializarBD(&db) != SQLITE_OK) {
 		printf("Error al abrir la base de datos\n");
