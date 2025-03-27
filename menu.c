@@ -101,89 +101,52 @@ char menuRegistro() {
 
 // Función para iniciar sesión
 void iniciarSesion() {
-    char usuario[MAX], contrasena[MAX], opcionMenu;
-    FILE *archivo = fopen("usuarios.txt", "r");
-    
-    if (archivo == NULL) {
-        printf("Error: No hay usuarios registrados.\n");
-        return;
-    }
+    char usuario[MAX], contrasena[MAX];
 
-    printf("\nINICIAR SESION\n");
-    printf("---\n");
+    printf("\nINICIAR SESIÓN\n");
+    printf("--------------\n");
     printf("Usuario: ");
     fflush(stdout);
-    scanf("%29s", usuario);  // Limita la lectura para evitar desbordamiento
+    scanf("%29s", usuario);
     while (getchar() != '\n');
 
-    printf("Contrasena: ");
+    printf("Contraseña: ");
     fflush(stdout);
-    leerContrasena(contrasena);
+    //leerContrasena(contrasena);
+
     while (getchar() != '\n');
+    printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
 
-    menuUsuario();
 
-
-    // Verificar credenciales en el archivo
-    char linea[MAX_STR * 7];  // Ajusta según el tamaño máximo de una línea
-    int encontrado = 1;
-    
-    while (fgets(linea, sizeof(linea), archivo)) {
-        char *token = strtok(linea, "|");
-        char *campos[7];  // Para almacenar los campos del usuario (nombre, apellidos, dni, etc.)
-        int i = 0;
-        
-        while (token != NULL && i < 7) {
-            campos[i++] = token;
-            token = strtok(NULL, "|");
-        }
-        
-        // Comparar usuario y contraseña (asumiendo que el email es el "usuario")
-        if (strcmp(campos[4], usuario) == 0 && strcmp(campos[6], contrasena) == 0) {
-            encontrado = 1;
-            break;
-        }
-    }
-
-    fclose(archivo);
-
-    if (encontrado) {
-    	do {
-    		printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
-    		Usuario usuarioActual;
-    		//CARGAR USUARIO DESDE LA BD
-    		opcionMenu = menuUsuario();
-    		switch (opcionMenu) {
-    		case '1':
-    			printf("Viendo perfil...\n");
-    			mostrarUsuario(&usuarioActual);
-    			fflush(stdout);
-    			break;
-    		case '2':
-    			printf("Editando perfil...\n");
-    			editarUsuario(&usuarioActual);
-    			//Guardar cambios en la BD
-    			fflush(stdout);
-    			break;
-    		case '3':
-    			printf("Buscando libros...\n");
-    			fflush(stdout);
-    			break;
-    		case '4':
-    		    printf("Historial de prestamos...\n");
-    		    fflush(stdout);
-    		    break;
-    		case '5':
-    		    printf("Devolviendo libros...\n");
-    		    fflush(stdout);
-    		    break;
-    		default:
-    			printf("ERROR! Opción incorrecta\n");
-    			fflush(stdout);
-    		}
-    	} while(opcionMenu != 0);
-    }
+    char opcionMenu;
+    do {
+        opcionMenu = menuUsuario();
+        switch (opcionMenu) {
+                   case '1':
+                       printf("Viendo perfil...\n");
+                       break;
+                   case '2':
+                       printf("Editando perfil...\n");
+                       break;
+                   case '3':
+                       printf("Buscando libros...\n");
+                       break;
+                   case '4':
+                       printf("Historial de préstamos...\n");
+                       break;
+                   case '5':
+                       printf("Devolviendo libros...\n");
+                       break;
+                   case '0':
+                       printf("Saliendo...\n");
+                       break;
+                   default:
+                       printf("ERROR! Opción incorrecta\n");
+               }
+               printf("\n");
+    } while (opcionMenu != '0');
 }
+
 char menuUsuario() {
 	char opcionMenu;
 	printf("----------\n");
