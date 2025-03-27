@@ -15,26 +15,54 @@
 #define MAX_STR 100 // Tamaño máximo para strings largos como nombre, apellidos, etc.
 
 // Función para leer la contraseña y mostrar asteriscos
+// Función para leer la contraseña y mostrar asteriscos
 void leerContrasena(char* password) {
     int i = 0;
     char ch;
 
+#ifdef _WIN32
     while (1) {
         ch = _getch();  // Lee un carácter sin mostrarlo
         if (ch == '\r' || ch == '\n') {  // Si es Enter
-            password[i] = '\0';  // Termina la cadena
+            password[i] = '\0';
             break;
         } else if (ch == 8 || ch == 127) {  // Manejo de retroceso
             if (i > 0) {
                 i--;
-                printf("\b \b");  // Borra el último carácter
+                printf("\b \b");
             }
         } else if (i < MAX - 1) {
             password[i++] = ch;
-            printf("*");  // Muestra un asterisco
+            printf("*");
         }
     }
+#else
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt); // Obtener atributos actuales del terminal
+    newt = oldt;
+    newt.c_lflag &= ~(ECHO); // Desactivar eco de la entrada
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt); // Aplicar cambios
+
+    while (1) {
+        ch = getchar();
+        if (ch == '\n' || ch == EOF) {
+            password[i] = '\0';
+            break;
+        } else if (ch == 8 || ch == 127) {  // Manejo de retroceso
+            if (i > 0) {
+                i--;
+                printf("\b \b");
+            }
+        } else if (i < MAX - 1) {
+            password[i++] = ch;
+            printf("*");
+        }
+    }
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // Restaurar configuración original
+#endif
 }
+
 
 char menuPrincipal() {
     char opcion;
