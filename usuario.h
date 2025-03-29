@@ -27,7 +27,7 @@
                           const char *telefono, const char *contrasena, int es_Admin);
 
  void mostrarUsuario(sqlite3 *db, const char *nombreUsuario);
- void editarUsuario(sqlite3 *db, const char *nombreUsuario);
+ void editarUsuario(sqlite3 *db, char *nombreUsuario);
  
  
  

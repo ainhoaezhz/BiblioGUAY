@@ -69,5 +69,17 @@ void crearTablas(sqlite3 *db) {
     if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
         fprintf(stderr, "Error al insertar admin: %s\n", errMsg);
         sqlite3_free(errMsg);
+
     }
+
+
+    snprintf(sql, sizeof(sql),
+                "INSERT INTO Usuario (nombre, apellidos, dni, direccion, email, telefono, contrasena, es_Admin) "
+                "SELECT 'juan', 'perez', '56289643N', 'c/lasMercedes 5', 'juanperez@gmail.com', '634895496', 'contrasena', 0 "
+                "WHERE NOT EXISTS (SELECT 1 FROM Usuario WHERE dni = '56289643N');");
+
+        if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
+            fprintf(stderr, "Error al insertar admin: %s\n", errMsg);
+            sqlite3_free(errMsg);
+        }
 }

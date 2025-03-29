@@ -241,7 +241,7 @@ int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
 
 	snprintf(sql, sizeof(sql),
 			"SELECT 1 FROM Usuario WHERE nombre = ? AND contrasena = ?;");
-	printf("Consulta SQL: %s\n", sql);  // Agregar depuración aquí
+
 
 	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "Error al preparar la consulta: %s\n",
