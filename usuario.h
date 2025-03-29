@@ -29,6 +29,6 @@
  void mostrarUsuario(sqlite3 *db, const char *nombreUsuario);
  void editarUsuario(sqlite3 *db, char *nombreUsuario);
  
- 
+ void visualizarHistorial(sqlite3 *db, const char *dniUsuario);
  
  #endif /* USUARIO_H_ */

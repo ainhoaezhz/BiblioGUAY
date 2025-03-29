@@ -120,8 +120,7 @@ void iniciarSesion() {
 
         printf("Contraseña: ");
         fflush(stdout);
-        scanf("%99s", contrasena);
-        //leerContrasena(contrasena);  // Si estás utilizando leerContrasena, déjalo aquí.
+        scanf("%79s", contrasena);  // Usar MAX-1 para dejar espacio para el '\0'        //leerContrasena(contrasena);  // Si estás utilizando leerContrasena, déjalo aquí.
 
         while (getchar() != '\n');  // Limpiar el buffer de entrada
 
@@ -153,8 +152,21 @@ void iniciarSesion() {
 			printf("Buscando libros...\n");
 			break;
 		case '4':
-			printf("Historial de préstamos...\n");
-			break;
+		    printf("Historial de préstamos...\n");
+		    {
+		        // Necesitamos obtener el DNI del usuario actual
+		        sqlite3_stmt *stmt;
+		        const char *sql = "SELECT dni FROM Usuario WHERE nombre = ?;";
+		        if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+		            sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+		            if (sqlite3_step(stmt) == SQLITE_ROW) {
+		                const char *dni = (const char *)sqlite3_column_text(stmt, 0);
+		                visualizarHistorial(db, dni);
+		            }
+		            sqlite3_finalize(stmt);
+		        }
+		    }
+		    break;
 		case '5':
 			printf("Devolviendo libros...\n");
 			break;
