@@ -1,9 +1,7 @@
-menu.o: ../menu.c ../menu.h ../sqlite3.h ../usuario.h ../bd.h
+menu.o: ../menu.c ../menu.h ../usuario.h ../sqlite3.h
 
 ../menu.h:
 
-../sqlite3.h:
-
 ../usuario.h:
 
-../bd.h:
+../sqlite3.h:

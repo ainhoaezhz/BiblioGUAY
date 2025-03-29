@@ -9,6 +9,7 @@ C_SRCS += \
 ../libro.c \
 ../main.c \
 ../menu.c \
+../registro.c \
 ../sqlite3.c \
 ../usuario.c 
 
@@ -18,6 +19,7 @@ C_DEPS += \
 ./libro.d \
 ./main.d \
 ./menu.d \
+./registro.d \
 ./sqlite3.d \
 ./usuario.d 
 
@@ -27,6 +29,7 @@ OBJS += \
 ./libro.o \
 ./main.o \
 ./menu.o \
+./registro.o \
 ./sqlite3.o \
 ./usuario.o 
 
@@ -43,7 +46,7 @@ OBJS += \
 clean: clean--2e-
 
 clean--2e-:
-	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
+	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./registro.d ./registro.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
 
 .PHONY: clean--2e-
 
