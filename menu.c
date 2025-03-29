@@ -10,6 +10,7 @@
 #else
 #include <termios.h> // Para Linux/Mac
 #include <unistd.h>
+#include "bd.h"
 #endif
 
 
@@ -107,34 +108,31 @@ char menuRegistro() {
 }
 
 void iniciarSesion() {
-	char usuario[MAX], contrasena[MAX];
+    char usuario[MAX], contrasena[MAX];
 
-	do {
-		printf("\nINICIAR SESIÓN\n");
-		printf("--------------\n");
-		printf("Usuario: ");
-		fflush(stdout);
-		scanf("%29s", usuario);
-		while (getchar() != '\n')
-			;
+    do {
+        printf("\nINICIAR SESIÓN\n");
+        printf("--------------\n");
+        printf("Usuario: ");
+        fflush(stdout);
+        scanf("%29s", usuario);
+        while (getchar() != '\n') ;  // Limpiar el buffer de entrada
 
-		printf("Contraseña: ");
-		fflush(stdout);
-		scanf("%99s", contrasena);
-		//leerContrasena(contrasena);
+        printf("Contraseña: ");
+        fflush(stdout);
+        scanf("%99s", contrasena);
+        //leerContrasena(contrasena);  // Si estás utilizando leerContrasena, déjalo aquí.
 
-		while (getchar() != '\n');
+        while (getchar() != '\n');  // Limpiar el buffer de entrada
 
-
-		if (verificarSesion(db, usuario, contrasena)) {
-			printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
-			break; // Salir del bucle si la autenticación es correcta
-		} else {
-			printf(
-					"\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
-		}
-	} while (1); // Bucle hasta que las credenciales sean correctas´
-
+        // Verificar sesión
+        if (verificarSesion(db, usuario, contrasena)) {
+            printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+            break; // Salir del bucle si la autenticación es correcta
+        } else {
+            printf("\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
+        }
+    } while (1); // Bucle hasta que las credenciales sean correctas
 
 
 
@@ -145,9 +143,11 @@ void iniciarSesion() {
 		switch (opcionMenu) {
 		case '1':
 			printf("Viendo perfil...\n");
+			mostrarUsuario(db, usuario);
 			break;
 		case '2':
 			printf("Editando perfil...\n");
+			editarUsuario(db, usuario);
 			break;
 		case '3':
 			printf("Buscando libros...\n");

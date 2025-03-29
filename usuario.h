@@ -7,6 +7,7 @@
 
  #ifndef USUARIO_H_
  #define USUARIO_H_
+ #include "sqlite3.h"
  
  #define MAX_STR 100
  
@@ -25,8 +26,8 @@
                           const char *dni, const char *direccion, const char *email,
                           const char *telefono, const char *contrasena, int es_Admin);
 
- void mostrarUsuario(const Usuario *u);
- void editarUsuario(Usuario *u);
+ void mostrarUsuario(sqlite3 *db, const char *nombreUsuario);
+ void editarUsuario(sqlite3 *db, const char *nombreUsuario);
  
  
  
