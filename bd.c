@@ -63,12 +63,10 @@ void crearTablas(sqlite3 *db) {
         }
 
     // Insertar usuario admin si no existe
-    // En crearTablas():
     snprintf(sql, sizeof(sql),
             "INSERT INTO Usuario (nombre, apellidos, dni, direccion, email, telefono, contrasena, es_Admin) "
             "SELECT 'admin', 'admin', '00000000A', 'admin', 'admin@admin.com', '000000000', 'admin', 1 "
             "WHERE NOT EXISTS (SELECT 1 FROM Usuario WHERE dni = '00000000A');");
-
 
     if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
         fprintf(stderr, "Error al insertar admin: %s\n", errMsg);
@@ -184,20 +182,3 @@ void buscar_libros_por_titulo(sqlite3 *db,const char *titulo_buscar) {
     sqlite3_finalize(stmt);
 }
 
-int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT 1 FROM Usuario WHERE nombre = ? AND contrasena = ?;";
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
-        return 0;
-    }
-
-    sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, contrasena, -1, SQLITE_STATIC);
-
-    int resultado = (sqlite3_step(stmt) == SQLITE_ROW);
-    sqlite3_finalize(stmt);
-
-    return resultado;
-}

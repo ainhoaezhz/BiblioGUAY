@@ -216,3 +216,122 @@ void visualizarHistorial(sqlite3 *db, const char *dniUsuario) {
 	sqlite3_finalize(stmt);
 }
 
+void registrarUsuario(sqlite3 *db, int esAdmin) {
+	char nombre[MAX_STR], apellido[MAX_STR], dni[MAX_STR], dir[MAX_STR], mail[MAX_STR], tlf[MAX_STR], contrasena[MAX_STR];
+	char sql[512];
+	 sqlite3_stmt *stmt;
+	    int intentos = 0;
+	    const int MAX_INTENTOS = 5;
+
+
+	    while (intentos < MAX_INTENTOS) {
+	            printf("NOMBRE: ");
+	            fflush(stdout);
+	            fgets(nombre, MAX_STR, stdin);
+	            nombre[strcspn(nombre, "\n")] = '\0';
+
+	            printf("APELLIDOS: ");
+	            fflush(stdout);
+	            fgets(apellido, MAX_STR, stdin);
+	            apellido[strcspn(apellido, "\n")] = '\0';
+
+	            printf("DNI: ");
+	            fflush(stdout);
+	            fgets(dni, MAX_STR, stdin);
+	            dni[strcspn(dni, "\n")] = '\0';
+
+	            // Verificar si el DNI ya existe
+	            snprintf(sql, sizeof(sql), "SELECT 1 FROM Usuario WHERE dni = ?;");
+	            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+	                fprintf(stderr, "Error al verificar DNI: %s\n", sqlite3_errmsg(db));
+	                return;
+	            }
+
+	            sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
+	            if (sqlite3_step(stmt) == SQLITE_ROW) {
+	                printf("\nError: El DNI %s ya está registrado.\n", dni);
+	                sqlite3_finalize(stmt);
+	                intentos++;
+	                if (intentos < MAX_INTENTOS) {
+	                    printf("Por favor, intente nuevamente.\n\n");
+	                }
+	                continue;
+	            }
+	            sqlite3_finalize(stmt);
+
+	            printf("DIRECCIÓN: ");
+	            fflush(stdout);
+	            fgets(dir, MAX_STR, stdin);
+	            dir[strcspn(dir, "\n")] = '\0';
+
+	            printf("EMAIL: ");
+	            fflush(stdout);
+	            fgets(mail, MAX_STR, stdin);
+	            mail[strcspn(mail, "\n")] = '\0';
+
+	            // Verificar si el email ya existe
+	            snprintf(sql, sizeof(sql), "SELECT 1 FROM Usuario WHERE email = ?;");
+	            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+	                fprintf(stderr, "Error al verificar email: %s\n", sqlite3_errmsg(db));
+	                return;
+	            }
+
+	            sqlite3_bind_text(stmt, 1, mail, -1, SQLITE_STATIC);
+	            if (sqlite3_step(stmt) == SQLITE_ROW) {
+	                printf("\nError: El email %s ya está registrado.\n", mail);
+	                sqlite3_finalize(stmt);
+	                intentos++;
+	                if (intentos < MAX_INTENTOS) {
+	                    printf("Por favor, intente nuevamente.\n\n");
+	                }
+	                continue;
+	            }
+	            sqlite3_finalize(stmt);
+
+	            printf("TELÉFONO: ");
+	            fflush(stdout);
+	            fgets(tlf, MAX_STR, stdin);
+	            tlf[strcspn(tlf, "\n")] = '\0';
+
+	            printf("CONTRASEÑA: ");
+	            fflush(stdout);
+	            fgets(contrasena, MAX_STR, stdin);
+	            contrasena[strcspn(contrasena, "\n")] = '\0';
+
+	            // Insertar el nuevo usuario
+	            snprintf(sql, sizeof(sql),
+	                "INSERT INTO Usuario (nombre, apellidos, dni, direccion, email, telefono, contrasena, es_Admin) "
+	                "VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+
+	            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+	                fprintf(stderr, "Error al preparar inserción: %s\n", sqlite3_errmsg(db));
+	                return;
+	            }
+
+	            // Vincular parámetros
+	            sqlite3_bind_text(stmt, 1, nombre, -1, SQLITE_STATIC);
+	            sqlite3_bind_text(stmt, 2, apellido, -1, SQLITE_STATIC);
+	            sqlite3_bind_text(stmt, 3, dni, -1, SQLITE_STATIC);
+	            sqlite3_bind_text(stmt, 4, dir, -1, SQLITE_STATIC);
+	            sqlite3_bind_text(stmt, 5, mail, -1, SQLITE_STATIC);
+	            sqlite3_bind_text(stmt, 6, tlf, -1, SQLITE_STATIC);
+	            sqlite3_bind_text(stmt, 7, contrasena, -1, SQLITE_STATIC);
+	            sqlite3_bind_int(stmt, 8, esAdmin);
+
+	            if (sqlite3_step(stmt) != SQLITE_DONE) {
+	                fprintf(stderr, "Error al registrarse : %s\n", sqlite3_errmsg(db));
+	                sqlite3_finalize(stmt);
+	                intentos++;
+	                if (intentos < MAX_INTENTOS) {
+	                    printf("Por favor, intente nuevamente.\n\n");
+	                }
+	                continue;
+	            }
+
+	            sqlite3_finalize(stmt);
+	            printf("\n¡Registro exitoso! %s has sido registrado correctamente ya puedes iniciar sesión.\n", nombre);
+	            return;
+	        }
+
+	        printf("\nHa alcanzado el máximo número de intentos. Por favor, intente más tarde.\n");
+}
