@@ -1,20 +1,17 @@
-/*
- * menu.h
- *
- *  Created on: 5 mar 2025
- *      Author: Genesis
- */
-
 #ifndef MENU_H_
 #define MENU_H_
 
-#include "sqlite3.h"  // Incluye el encabezado de SQLite3
+#include "sqlite3.h"
 
+#define MAX 80
+#define MAX_STR 100
+
+// Declaraciones de funciones
+void leerContrasena(char *password);
 char menuPrincipal();
 char menuRegistro();
-void iniciarSesion();
-void registrarse(sqlite3 *db);
 char menuUsuario();
-void leerContrasena(char *password);
+void iniciarSesion();
+void menuUsuarioNormal(sqlite3 *db, const char *usuario);
 
 #endif /* MENU_H_ */
