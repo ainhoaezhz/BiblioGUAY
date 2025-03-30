@@ -32,4 +32,6 @@
  
  void visualizarHistorial(sqlite3 *db, const char *dniUsuario);
  
+ void registrarUsuario (sqlite3 *db, int esAdmin);
+
  #endif /* USUARIO_H_ */
