@@ -19,9 +19,6 @@
 
 
 
-
-
-// Función para leer la contraseña y mostrar asteriscos
 // Función para leer la contraseña y mostrar asteriscos
 void leerContrasena(char *password) {
 	int i = 0;
@@ -137,6 +134,7 @@ void iniciarSesion() {
 
 
 	char opcionMenu;
+	char* titulo;
 	do {
 		opcionMenu = menuUsuario();
 		switch (opcionMenu) {
@@ -150,7 +148,10 @@ void iniciarSesion() {
 			break;
 		case '3':
 			printf("Buscando libros...\n");
-			buscar_libros_por_titulo(db, "cien");
+			printf("Introduzca el título del libro:");
+			fflush(stdout);
+			scanf("%30s", titulo);
+			buscar_libros_por_titulo(db, titulo);
 			break;
 		case '4':
 		    printf("Historial de préstamos...\n");

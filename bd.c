@@ -128,7 +128,7 @@ void insertarLibrosBase(sqlite3 *db) {
     sqlite3_finalize(stmt);
 }
 
-void buscar_libros_por_titulo(sqlite3 *db, const char *titulo_buscar) {
+void buscar_libros_por_titulo(sqlite3 *db,const char *titulo_buscar) {
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id, nombre, autor, genero, estado FROM Libro WHERE nombre LIKE ?;";
     
@@ -143,8 +143,8 @@ void buscar_libros_por_titulo(sqlite3 *db, const char *titulo_buscar) {
     sqlite3_bind_text(stmt, 1, patron, -1, SQLITE_TRANSIENT);
     
     printf("\nResultados para '%s':\n", titulo_buscar);
-    printf("ID\tTítulo\t\tAutor\t\tGénero\t\tEstado\n");
-    printf("------------------------------------------------------------\n");
+    printf("ID\tTítulo\t\t\tAutor\t\tGénero\t\tEstado\n");
+    printf("----------------------------------------------------------------\n");
     
     int encontrados = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
