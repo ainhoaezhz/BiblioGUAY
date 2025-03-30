@@ -150,6 +150,7 @@ void iniciarSesion() {
 			break;
 		case '3':
 			printf("Buscando libros...\n");
+			buscar_libros_por_titulo(db, "cien");
 			break;
 		case '4':
 		    printf("Historial de préstamos...\n");
