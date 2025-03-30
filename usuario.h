@@ -22,6 +22,7 @@
      int es_Admin; //0=NO 1=SI
  } Usuario;
  
+
  void inicializarUsuario(Usuario *u, const char *nombre, const char *apellidos,
                           const char *dni, const char *direccion, const char *email,
                           const char *telefono, const char *contrasena, int es_Admin);

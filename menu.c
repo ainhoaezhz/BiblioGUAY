@@ -4,6 +4,7 @@
 #include <string.h>
 #include "sqlite3.h"
 #include "bd.h"
+#include "menuAdmin.h"
 
 #ifdef _WIN32
 #include <conio.h> // Para Windows (ocultar contraseña)
@@ -115,69 +116,87 @@ void iniciarSesion() {
         printf("--------------\n");
         printf("Usuario: ");
         fflush(stdout);
-        scanf("%29s", usuario);
-        while (getchar() != '\n') ;  // Limpiar el buffer de entrada
+        scanf("%79s", usuario);  // Usar MAX-1 para evitar desbordamiento
+        while (getchar() != '\n');  // Limpiar buffer
 
         printf("Contraseña: ");
         fflush(stdout);
-        scanf("%79s", contrasena);  // Usar MAX-1 para dejar espacio para el '\0'        //leerContrasena(contrasena);  // Si estás utilizando leerContrasena, déjalo aquí.
+        leerContrasena(contrasena);
+        while (getchar() != '\n');  // Limpiar buffer
 
-        while (getchar() != '\n');  // Limpiar el buffer de entrada
-
-        // Verificar sesión
+        // Verificar credenciales
         if (verificarSesion(db, usuario, contrasena)) {
             printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
-            break; // Salir del bucle si la autenticación es correcta
+
+            // Verificar tipo de usuario
+            sqlite3_stmt *stmt;
+            const char *sql = "SELECT es_Admin FROM Usuario WHERE nombre = ?;";
+
+            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+                sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+
+                if (sqlite3_step(stmt) == SQLITE_ROW) {
+                    int esAdmin = sqlite3_column_int(stmt, 0);
+
+                    if (esAdmin) {
+                        // Menú Administrador
+                        printf("\nAcceso como ADMINISTRADOR\n");
+                        ejecutarMenuAdmin(db);
+                    } else {
+                        // Menú Usuario Normal
+                        char opcionMenu;
+                        do {
+                            opcionMenu = menuUsuario();
+                            switch (opcionMenu) {
+                                case '1':
+                                    printf("Viendo perfil...\n");
+                                    mostrarUsuario(db, usuario);
+                                    break;
+                                case '2':
+                                    printf("Editando perfil...\n");
+                                    editarUsuario(db, usuario);
+                                    break;
+                                case '3':
+                                    printf("Buscando libros...\n");
+                                    // buscarLibros(db);
+                                    break;
+                                case '4':
+                                    printf("Historial de préstamos...\n");
+                                    {
+                                        // Obtener DNI del usuario para el historial
+                                        sqlite3_stmt *stmt2;
+                                        const char *sql2 = "SELECT dni FROM Usuario WHERE nombre = ?;";
+                                        if (sqlite3_prepare_v2(db, sql2, -1, &stmt2, NULL) == SQLITE_OK) {
+                                            sqlite3_bind_text(stmt2, 1, usuario, -1, SQLITE_STATIC);
+                                            if (sqlite3_step(stmt2) == SQLITE_ROW) {
+                                                const char *dni = (const char *)sqlite3_column_text(stmt2, 0);
+                                                visualizarHistorial(db, dni);
+                                            }
+                                            sqlite3_finalize(stmt2);
+                                        }
+                                    }
+                                    break;
+                                case '5':
+                                    printf("Devolviendo libros...\n");
+                                    // devolverLibros(db, usuario);
+                                    break;
+                                case '0':
+                                    printf("Saliendo...\n");
+                                    break;
+                                default:
+                                    printf("ERROR! Opción incorrecta\n");
+                            }
+                            printf("\n");
+                        } while (opcionMenu != '0');
+                    }
+                }
+                sqlite3_finalize(stmt);
+            }
+            break; // Salir del bucle de login
         } else {
             printf("\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
         }
-    } while (1); // Bucle hasta que las credenciales sean correctas
-
-
-
-
-	char opcionMenu;
-	do {
-		opcionMenu = menuUsuario();
-		switch (opcionMenu) {
-		case '1':
-			printf("Viendo perfil...\n");
-			mostrarUsuario(db, usuario);
-			break;
-		case '2':
-			printf("Editando perfil...\n");
-			editarUsuario(db, usuario);
-			break;
-		case '3':
-			printf("Buscando libros...\n");
-			break;
-		case '4':
-		    printf("Historial de préstamos...\n");
-		    {
-		        // Necesitamos obtener el DNI del usuario actual
-		        sqlite3_stmt *stmt;
-		        const char *sql = "SELECT dni FROM Usuario WHERE nombre = ?;";
-		        if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-		            sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
-		            if (sqlite3_step(stmt) == SQLITE_ROW) {
-		                const char *dni = (const char *)sqlite3_column_text(stmt, 0);
-		                visualizarHistorial(db, dni);
-		            }
-		            sqlite3_finalize(stmt);
-		        }
-		    }
-		    break;
-		case '5':
-			printf("Devolviendo libros...\n");
-			break;
-		case '0':
-			printf("Saliendo...\n");
-			break;
-		default:
-			printf("ERROR! Opción incorrecta\n");
-		}
-		printf("\n");
-	} while (opcionMenu != '0');
+    } while (1); // Bucle hasta credenciales correctas
 }
 
 char menuUsuario() {

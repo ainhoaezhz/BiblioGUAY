@@ -1,4 +1,5 @@
-menu.o: ../menu.c ../menu.h ../sqlite3.h ../usuario.h ../bd.h
+menu.o: ../menu.c ../menu.h ../sqlite3.h ../usuario.h ../bd.h \
+  ../menuAdmin.h
 
 ../menu.h:
 
@@ -7,3 +8,5 @@ menu.o: ../menu.c ../menu.h ../sqlite3.h ../usuario.h ../bd.h
 ../usuario.h:
 
 ../bd.h:
+
+../menuAdmin.h:
