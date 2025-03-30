@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#define MAX_NOMBRE 200
+#define MAX_NOMBRE 100
 #define MAX_AUTOR 100
 #define MAX_GENERO 50
 

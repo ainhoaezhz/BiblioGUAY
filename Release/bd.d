@@ -1,7 +1,5 @@
-bd.o: ../bd.c ../bd.h ../sqlite3.h ../libro.h
+bd.o: ../bd.c ../bd.h ../sqlite3.h
 
 ../bd.h:
 
 ../sqlite3.h:
-
-../libro.h:
