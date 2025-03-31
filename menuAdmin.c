@@ -86,76 +86,121 @@ void listarUsuarios(sqlite3 *db) {
 }
 
 void eliminarUsuario(sqlite3 *db) {
-	char dni[MAX_STR];
-	printf("\nDNI del usuario a eliminar: ");
-	scanf("%19s", dni);
-	while (getchar() != '\n');
+    char dni[MAX_STR];
+    printf("\nDNI del usuario a eliminar: ");
+    fflush(stdout);
+    scanf("%19s", dni);
+    while (getchar() != '\n');
 
-	// Verificar que no es el admin principal
-	if (strcmp(dni, "00000000A") == 0) {
-		printf("No se puede eliminar al administrador principal.\n");
-		return;
-	}
+    // Verificar que no es el admin principal
+    if (strcmp(dni, "00000000A") == 0) {
+        printf("No se puede eliminar al administrador principal.\n");
+        return;
+    }
 
-	sqlite3_stmt *stmt;
-	const char *sql = "DELETE FROM Usuario WHERE dni = ?;";
+    // Verificar si el usuario existe antes de eliminarlo
+    sqlite3_stmt *checkStmt;
+    const char *checkSql = "SELECT COUNT(*) FROM Usuario WHERE dni = ?;";
 
-	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-		fprintf(stderr, "Error al preparar eliminación: %s\n",
-				sqlite3_errmsg(db));
-		return;
-	}
+    if (sqlite3_prepare_v2(db, checkSql, -1, &checkStmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar verificación: %s\n", sqlite3_errmsg(db));
+        return;
+    }
 
-	sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
+    sqlite3_bind_text(checkStmt, 1, dni, -1, SQLITE_STATIC);
 
-	if (sqlite3_step(stmt) == SQLITE_DONE) {
-		printf("Usuario eliminado correctamente.\n");
-	} else {
-		printf("Error al eliminar usuario.\n");
-	}
-	sqlite3_finalize(stmt);
+    int userExists = 0;
+    if (sqlite3_step(checkStmt) == SQLITE_ROW) {
+        userExists = sqlite3_column_int(checkStmt, 0);
+    }
+    sqlite3_finalize(checkStmt);
+
+    if (userExists == 0) {
+        printf("El DNI ingresado no está registrado.\n");
+        return;
+    }
+
+    sqlite3_stmt *stmt;
+    const char *sql = "DELETE FROM Usuario WHERE dni = ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar eliminación: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
+
+    if (sqlite3_step(stmt) == SQLITE_DONE) {
+        printf("Usuario eliminado correctamente.\n");
+    } else {
+        printf("Error al eliminar usuario.\n");
+    }
+    sqlite3_finalize(stmt);
 }
+
 
 void cambiarPermisosUsuario(sqlite3 *db) {
-	char dni[MAX_STR];
-	int nuevoTipo;
+    char dni[MAX_STR];
+    int nuevoTipo;
 
-	printf("\nDNI del usuario a modificar: ");
-	fflush(stdout);
-	scanf("%19s", dni);
-	while (getchar() != '\n');
+    printf("\nDNI del usuario a modificar: ");
+    fflush(stdout);
+    scanf("%19s", dni);
+    while (getchar() != '\n');
 
-	// Verificar que no es el admin principal
-	if (strcmp(dni, "00000000A") == 0) {
-		printf("No se puede modificar al administrador principal.\n");
-		fflush(stdout);
-		return;
-	}
+    // Verificar que no es el admin principal
+    if (strcmp(dni, "00000000A") == 0) {
+        printf("No se puede modificar al administrador principal.\n");
+        fflush(stdout);
+        return;
+    }
 
-	printf("Nuevo tipo (0=Usuario, 1=Admin): ");
-	fflush(stdout);
-	scanf("%d", &nuevoTipo);
-	while (getchar() != '\n');
+    // Verificar si el usuario existe antes de modificar permisos
+    sqlite3_stmt *checkStmt;
+    const char *checkSql = "SELECT COUNT(*) FROM Usuario WHERE dni = ?;";
 
-	sqlite3_stmt *stmt;
-	const char *sql = "UPDATE Usuario SET es_Admin = ? WHERE dni = ?;";
+    if (sqlite3_prepare_v2(db, checkSql, -1, &checkStmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar verificación: %s\n", sqlite3_errmsg(db));
+        return;
+    }
 
-	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-		fprintf(stderr, "Error al preparar actualización: %s\n",
-				sqlite3_errmsg(db));
-		return;
-	}
+    sqlite3_bind_text(checkStmt, 1, dni, -1, SQLITE_STATIC);
 
-	sqlite3_bind_int(stmt, 1, nuevoTipo);
-	sqlite3_bind_text(stmt, 2, dni, -1, SQLITE_STATIC);
+    int userExists = 0;
+    if (sqlite3_step(checkStmt) == SQLITE_ROW) {
+        userExists = sqlite3_column_int(checkStmt, 0);
+    }
+    sqlite3_finalize(checkStmt);
 
-	if (sqlite3_step(stmt) == SQLITE_DONE) {
-		printf("Permisos actualizados correctamente.\n");
-	} else {
-		printf("Error al actualizar permisos.\n");
-	}
-	sqlite3_finalize(stmt);
+    if (userExists == 0) {
+        printf("El DNI ingresado no está registrado.\n");
+        return;
+    }
+
+    printf("Nuevo tipo (0=Usuario, 1=Admin): ");
+    fflush(stdout);
+    scanf("%d", &nuevoTipo);
+    while (getchar() != '\n');
+
+    sqlite3_stmt *stmt;
+    const char *sql = "UPDATE Usuario SET es_Admin = ? WHERE dni = ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, nuevoTipo);
+    sqlite3_bind_text(stmt, 2, dni, -1, SQLITE_STATIC);
+
+    if (sqlite3_step(stmt) == SQLITE_DONE) {
+        printf("Permisos actualizados correctamente.\n");
+    } else {
+        printf("Error al actualizar permisos.\n");
+    }
+    sqlite3_finalize(stmt);
 }
+
 
 void gestionarUsuarios(sqlite3 *db) {
 	char opcion;
