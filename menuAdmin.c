@@ -13,13 +13,14 @@ char menuAdministrador() {
 	printf("2. Gestionar libros\n");
 	printf("3. Ver estadísticas\n");
 	printf("4. Listado de libros disponibles\n");
+	printf("5. Usuario con mas prestamos\n");
+	printf("6. Libro mas prestado\n");
 	printf("0. Salir\n");
 	printf("Elige una opción: ");
 	fflush(stdout);
 
 	scanf(" %c", &opcion);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	return opcion;
 }
@@ -41,6 +42,12 @@ void ejecutarMenuAdmin(sqlite3 *db) {
 		case '4':
 			printf("\nListando libros disponibles...\n");
 			listarLibrosDisponibles(db);
+			break;
+		case '5':
+			mostrarUsuarioConMasPrestamos(db);
+			break;
+		case '6':
+			mostrarLibroMasPrestado(db);
 			break;
 		case '0':
 			printf("Volviendo al menú principal...\n");
@@ -82,8 +89,7 @@ void eliminarUsuario(sqlite3 *db) {
 	char dni[MAX_STR];
 	printf("\nDNI del usuario a eliminar: ");
 	scanf("%19s", dni);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	// Verificar que no es el admin principal
 	if (strcmp(dni, "00000000A") == 0) {
@@ -117,8 +123,7 @@ void cambiarPermisosUsuario(sqlite3 *db) {
 	printf("\nDNI del usuario a modificar: ");
 	fflush(stdout);
 	scanf("%19s", dni);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	// Verificar que no es el admin principal
 	if (strcmp(dni, "00000000A") == 0) {
@@ -130,8 +135,7 @@ void cambiarPermisosUsuario(sqlite3 *db) {
 	printf("Nuevo tipo (0=Usuario, 1=Admin): ");
 	fflush(stdout);
 	scanf("%d", &nuevoTipo);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	sqlite3_stmt *stmt;
 	const char *sql = "UPDATE Usuario SET es_Admin = ? WHERE dni = ?;";
@@ -165,8 +169,7 @@ void gestionarUsuarios(sqlite3 *db) {
 		fflush(stdout);
 
 		scanf(" %c", &opcion);
-		while (getchar() != '\n')
-			;
+		while (getchar() != '\n');
 
 		switch (opcion) {
 		case '1':
@@ -284,8 +287,7 @@ void eliminarLibro(sqlite3 *db) {
 	printf("\nID del libro a eliminar: ");
 	fflush(stdout);
 	scanf("%d", &id);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	sqlite3_stmt *stmt;
 	const char *sql = "DELETE FROM Libro WHERE id = ?;";
@@ -409,8 +411,7 @@ void gestionarLibros(sqlite3 *db) {
 		fflush(stdout);
 
 		scanf(" %c", &opcion);
-		while (getchar() != '\n')
-			;
+		while (getchar() != '\n');
 
 		switch (opcion) {
 		case '1':
@@ -431,6 +432,39 @@ void gestionarLibros(sqlite3 *db) {
 			printf("Opción no válida\n");
 		}
 	} while (1);
+}
+
+void mostrarLibroMasPrestado(sqlite3 *db) {
+	sqlite3_stmt *stmt;
+	const char *sql =
+		"SELECT l.nombre, l.autor, COUNT(p.id) AS total_prestamos "
+	    "FROM Libro l "
+	    "JOIN Prestamo p ON l.id = p.libro_id "
+	    "GROUP BY l.id "
+	    "ORDER BY total_prestamos DESC "
+	    "LIMIT 1;";
+
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+	    fprintf(stderr, "Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
+	    return;
+	}
+
+	printf("\n--- LIBRO MÁS PRESTADO ---\n");
+
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+
+	    const char *nombre = (const char *)sqlite3_column_text(stmt, 0);
+	    const char *autor = (const char *)sqlite3_column_text(stmt, 1);
+	    int total_prestamos = sqlite3_column_int(stmt, 2);
+
+	    printf("Título:   %s\n", nombre);
+	    printf("Autor:    %s\n", autor);
+	    printf("Préstamos: %d\n", total_prestamos);
+	} else {
+		printf("No hay préstamos registrados.\n");
+	}
+
+	sqlite3_finalize(stmt);
 }
 
 // --------------------------
@@ -476,4 +510,37 @@ void verEstadisticas(sqlite3 *db) {
 		}
 		sqlite3_finalize(stmt);
 	}
+}
+
+void mostrarUsuarioConMasPrestamos(sqlite3 *db) {
+	sqlite3_stmt *stmt;
+	const char *sql =
+		"SELECT u.nombre, u.apellidos, u.dni, COUNT(p.id) AS total_prestamos "
+	    "FROM Usuario u "
+	    "JOIN Prestamo p ON u.dni = p.usuario_dni "
+	    "GROUP BY u.dni "
+	    "ORDER BY total_prestamos DESC "
+	    "LIMIT 1;";
+
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
+	    return;
+	}
+
+	printf("\n--- USUARIO CON MÁS PRÉSTAMOS ---\n");
+
+	if(sqlite3_step(stmt) == SQLITE_ROW) {
+		const char *nombre = (const char *)sqlite3_column_text(stmt, 0);
+		const char *apellidos = (const char *)sqlite3_column_text(stmt, 1);
+		const char *dni = (const char *)sqlite3_column_text(stmt, 2);
+		int total_prestamos = sqlite3_column_int(stmt, 3);
+
+		printf("Nombre:    %s %s\n", nombre, apellidos);
+		printf("DNI:       %s\n", dni);
+		printf("Préstamos: %d\n", total_prestamos);
+	} else {
+		printf("No hay prestamos registrados.\n");
+	}
+
+	sqlite3_finalize(stmt);
 }

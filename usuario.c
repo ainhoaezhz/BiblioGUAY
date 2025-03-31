@@ -212,6 +212,5 @@ void visualizarHistorial(sqlite3 *db, const char *dniUsuario) {
     if (!encontrados) {
         printf("No se encontraron préstamos registrados.\n");
     }
-
     sqlite3_finalize(stmt);
 }

@@ -78,8 +78,7 @@ char menuPrincipal() {
 	fflush(stdout);
 
 	scanf(" %c", &opcion); // Espacio antes de %c para evitar problemas con '\n'
-	while (getchar() != '\n')
-		; // Limpiar el buffer de entrada
+	while (getchar() != '\n'); // Limpiar el buffer de entrada
 
 	return opcion;
 }
@@ -96,8 +95,7 @@ char menuRegistro() {
 	fflush(stdout);
 
 	scanf(" %c", &opcionRegistro);
-	while (getchar() != '\n')
-		; // Limpiar buffer de entrada
+	while (getchar() != '\n'); // Limpiar buffer de entrada
 
 	return opcionRegistro;
 }
@@ -112,15 +110,13 @@ void iniciarSesion() {
 		printf("Usuario: ");
 		fflush(stdout);
 		scanf("%29s", usuario);
-		while (getchar() != '\n')
-			;
+		while (getchar() != '\n');
 
 		printf("Contraseña: ");
 		fflush(stdout);
 		scanf("%79s", contrasena); // Usar MAX-1 para dejar espacio para el '\0'        //leerContrasena(contrasena);  // Si estás utilizando leerContrasena, déjalo aquí.
 
-		while (getchar() != '\n')
-			;
+		while (getchar() != '\n');
 
 		// Verificar sesión del usuario CONTRASEÑA + NOMBRE
 		if (verificarSesion(db, usuario, contrasena)) {
@@ -229,41 +225,34 @@ void registrarse(sqlite3 *db) {
 
 	printf("Nombre: ");
 	scanf("%99s", nuevoUsuario.nombre);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	printf("Apellidos: ");
 	scanf("%99s", nuevoUsuario.apellidos);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	printf("DNI: ");
 	scanf("%19s", nuevoUsuario.dni);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	printf("Direccion: ");
 	scanf("%99s", nuevoUsuario.direccion);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	printf("Email: ");
 	scanf("%99s", nuevoUsuario.email);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	printf("Telefono: ");
 	scanf("%14s", nuevoUsuario.telefono);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	printf("Contraseña: ");
 	leerContrasena(nuevoUsuario.contrasena);
 
 	printf("\u00bfEs administrador? (1: S\u00ed, 0: No): ");
 	scanf("%d", &nuevoUsuario.es_Admin);
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 	printf("Usuario registrado exitosamente\n");
 }
 

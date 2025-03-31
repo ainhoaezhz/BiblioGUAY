@@ -10,5 +10,7 @@ void ejecutarMenuAdmin(sqlite3 *db);
 void gestionarUsuarios(sqlite3 *db);
 void gestionarLibros(sqlite3 *db);
 void verEstadisticas(sqlite3 *db);
+void mostrarUsuarioConMasPrestamos(sqlite3 *db);
+void mostrarLibroMasPrestado(sqlite3 *db);
 
 #endif
