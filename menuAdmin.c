@@ -1,6 +1,7 @@
 #include "menuAdmin.h"
 #include "usuario.h"
 #include "libro.h"
+#include "bd.h"
 #include <stdio.h>
 #include <string.h>
 #include "sqlite3.h"
@@ -11,6 +12,7 @@ char menuAdministrador() {
 	printf("1. Gestionar usuarios\n");
 	printf("2. Gestionar libros\n");
 	printf("3. Ver estadísticas\n");
+	printf("4. Listado de libros disponibles\n");
 	printf("0. Salir\n");
 	printf("Elige una opción: ");
 	fflush(stdout);
@@ -36,6 +38,10 @@ void ejecutarMenuAdmin(sqlite3 *db) {
 		case '3':
 			verEstadisticas(db);
 			break;
+		case '4':
+			printf("\nListando libros disponibles...\n");
+			listarLibrosDisponibles(db);
+			break;
 		case '0':
 			printf("Volviendo al menú principal...\n");
 			break;
@@ -44,6 +50,7 @@ void ejecutarMenuAdmin(sqlite3 *db) {
 		}
 	} while (opcion != '0');
 }
+
 
 // --------------------------
 // GESTIÓN DE USUARIOS
