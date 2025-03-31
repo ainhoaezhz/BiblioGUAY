@@ -14,15 +14,9 @@
 #include "bd.h"
 #endif
 
-
 #define MAX 80 // Tamaño máximo para username y password
 #define MAX_STR 100 // Tamaño máximo para strings largos como nombre, apellidos, etc.
 
-
-
-
-
-// Función para leer la contraseña y mostrar asteriscos
 // Función para leer la contraseña y mostrar asteriscos
 void leerContrasena(char *password) {
 	int i = 0;
@@ -109,94 +103,98 @@ char menuRegistro() {
 }
 
 void iniciarSesion() {
-    char usuario[MAX], contrasena[MAX];
+	char usuario[MAX], contrasena[MAX];
+	int esAdmin = 0;
 
-    do {
-        printf("\nINICIAR SESIÓN\n");
-        printf("--------------\n");
-        printf("Usuario: ");
-        fflush(stdout);
-        scanf("%79s", usuario);  // Usar MAX-1 para evitar desbordamiento
-        while (getchar() != '\n');  // Limpiar buffer
+	do {
+		printf("\nINICIO DE SESIÓN\n");
+		printf("--------------\n");
+		printf("Usuario: ");
+		fflush(stdout);
+		scanf("%29s", usuario);
+		while (getchar() != '\n')
+			;
 
-        printf("Contraseña: ");
-        fflush(stdout);
-        leerContrasena(contrasena);
-        while (getchar() != '\n');  // Limpiar buffer
+		printf("Contraseña: ");
+		fflush(stdout);
+		scanf("%79s", contrasena); // Usar MAX-1 para dejar espacio para el '\0'        //leerContrasena(contrasena);  // Si estás utilizando leerContrasena, déjalo aquí.
 
-        // Verificar credenciales
-        if (verificarSesion(db, usuario, contrasena)) {
-            printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n", usuario);
+		while (getchar() != '\n')
+			;
 
-            // Verificar tipo de usuario
-            sqlite3_stmt *stmt;
-            const char *sql = "SELECT es_Admin FROM Usuario WHERE nombre = ?;";
+		// Verificar sesión del usuario CONTRASEÑA + NOMBRE
+		if (verificarSesion(db, usuario, contrasena)) {
+			//El usuario es admin?
+			if (autenticarUsuario(db, usuario, &esAdmin)) {
+				printf("\n¡Inicio de sesión exitoso! Bienvenido, %s.\n",
+						usuario);
+				printf("Rol: %s\n",
+						esAdmin ? "Administrador" : "Usuario Normal");
 
-            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-                sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+				if (esAdmin) {
+					ejecutarMenuAdmin(db);
+					return;
+				} else {
+					break;
+				}
 
-                if (sqlite3_step(stmt) == SQLITE_ROW) {
-                    int esAdmin = sqlite3_column_int(stmt, 0);
+			} else {
+				printf("\nError: No se pudo obtener el rol del usuario.\n");
+			}
+		} else {
+			printf(
+					"\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
+		}
+	} while (1);
 
-                    if (esAdmin) {
-                        // Menú Administrador
-                        printf("\nAcceso como ADMINISTRADOR\n");
-                        ejecutarMenuAdmin(db);
-                    } else {
-                        // Menú Usuario Normal
-                        char opcionMenu;
-                        do {
-                            opcionMenu = menuUsuario();
-                            switch (opcionMenu) {
-                                case '1':
-                                    printf("Viendo perfil...\n");
-                                    mostrarUsuario(db, usuario);
-                                    break;
-                                case '2':
-                                    printf("Editando perfil...\n");
-                                    editarUsuario(db, usuario);
-                                    break;
-                                case '3':
-                                    printf("Buscando libros...\n");
-                                    // buscarLibros(db);
-                                    break;
-                                case '4':
-                                    printf("Historial de préstamos...\n");
-                                    {
-                                        // Obtener DNI del usuario para el historial
-                                        sqlite3_stmt *stmt2;
-                                        const char *sql2 = "SELECT dni FROM Usuario WHERE nombre = ?;";
-                                        if (sqlite3_prepare_v2(db, sql2, -1, &stmt2, NULL) == SQLITE_OK) {
-                                            sqlite3_bind_text(stmt2, 1, usuario, -1, SQLITE_STATIC);
-                                            if (sqlite3_step(stmt2) == SQLITE_ROW) {
-                                                const char *dni = (const char *)sqlite3_column_text(stmt2, 0);
-                                                visualizarHistorial(db, dni);
-                                            }
-                                            sqlite3_finalize(stmt2);
-                                        }
-                                    }
-                                    break;
-                                case '5':
-                                    printf("Devolviendo libros...\n");
-                                    // devolverLibros(db, usuario);
-                                    break;
-                                case '0':
-                                    printf("Saliendo...\n");
-                                    break;
-                                default:
-                                    printf("ERROR! Opción incorrecta\n");
-                            }
-                            printf("\n");
-                        } while (opcionMenu != '0');
-                    }
-                }
-                sqlite3_finalize(stmt);
-            }
-            break; // Salir del bucle de login
-        } else {
-            printf("\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
-        }
-    } while (1); // Bucle hasta credenciales correctas
+	char opcionMenu;
+	char *titulo;
+	do {
+		opcionMenu = menuUsuario();
+		switch (opcionMenu) {
+		case '1':
+			printf("Viendo perfil...\n");
+			mostrarUsuario(db, usuario);
+			break;
+		case '2':
+			printf("Editando perfil...\n");
+			editarUsuario(db, usuario);
+			break;
+		case '3':
+			printf("Buscando libros...\n");
+			printf("Introduzca el título del libro:");
+			fflush(stdout);
+			scanf("%30s", titulo);
+			buscar_libros_por_titulo(db, titulo);
+			break;
+		case '4':
+			printf("Historial de préstamos...\n");
+			{
+				// Necesitamos obtener el DNI del usuario actual
+				sqlite3_stmt *stmt;
+				const char *sql = "SELECT dni FROM Usuario WHERE nombre = ?;";
+				if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+					sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+					if (sqlite3_step(stmt) == SQLITE_ROW) {
+						const char *dni = (const char*) sqlite3_column_text(
+								stmt, 0);
+						visualizarHistorial(db, dni);
+					}
+					sqlite3_finalize(stmt);
+				}
+			}
+			break;
+		case '5':
+			printf("Devolviendo libros...\n");
+			break;
+		case '0':
+			printf("Saliendo...\n");
+			break;
+		default:
+			printf("ERROR! Opción incorrecta\n");
+		}
+		printf("\n");
+	} while (opcionMenu != '0');
 }
 
 char menuUsuario() {
@@ -273,7 +271,6 @@ int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
 	snprintf(sql, sizeof(sql),
 			"SELECT 1 FROM Usuario WHERE nombre = ? AND contrasena = ?;");
 
-
 	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "Error al preparar la consulta: %s\n",
 				sqlite3_errmsg(db));
@@ -290,4 +287,27 @@ int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
 	sqlite3_finalize(stmt); // Liberar recursos
 	return autenticado;
 
+}
+
+int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin) {
+	sqlite3_stmt *stmt;
+	const char *sql = "SELECT es_Admin FROM Usuario WHERE nombre = ?;";
+
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+		return 0;
+	}
+
+	sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
+
+	int resultado = 0;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		*esAdmin = sqlite3_column_int(stmt, 0);
+		resultado = 1;
+	} else {
+		printf("Usuario no encontrado.\n");
+	}
+
+	sqlite3_finalize(stmt);
+	return resultado;
 }

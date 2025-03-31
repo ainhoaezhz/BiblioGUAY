@@ -6,42 +6,43 @@
 #include "sqlite3.h"
 
 char menuAdministrador() {
-    char opcion;
-    printf("\n--- MENÚ ADMINISTRADOR ---\n");
-    printf("1. Gestionar usuarios\n");
-    printf("2. Gestionar libros\n");
-    printf("3. Ver estadísticas\n");
-    printf("0. Salir\n");
-    printf("Elige una opción: ");
-    fflush(stdout);
+	char opcion;
+	printf("\n--- MENÚ ADMINISTRADOR ---\n");
+	printf("1. Gestionar usuarios\n");
+	printf("2. Gestionar libros\n");
+	printf("3. Ver estadísticas\n");
+	printf("0. Salir\n");
+	printf("Elige una opción: ");
+	fflush(stdout);
 
-    scanf(" %c", &opcion);
-    while (getchar() != '\n');
+	scanf(" %c", &opcion);
+	while (getchar() != '\n')
+		;
 
-    return opcion;
+	return opcion;
 }
 
 void ejecutarMenuAdmin(sqlite3 *db) {
-    char opcion;
-    do {
-        opcion = menuAdministrador();
-        switch (opcion) {
-            case '1':
-                gestionarUsuarios(db);
-                break;
-            case '2':
-                gestionarLibros(db);
-                break;
-            case '3':
-                verEstadisticas(db);
-                break;
-            case '0':
-                printf("Volviendo al menú principal...\n");
-                break;
-            default:
-                printf("Opción no válida.\n");
-        }
-    } while (opcion != '0');
+	char opcion;
+	do {
+		opcion = menuAdministrador();
+		switch (opcion) {
+		case '1':
+			gestionarUsuarios(db);
+			break;
+		case '2':
+			gestionarLibros(db);
+			break;
+		case '3':
+			verEstadisticas(db);
+			break;
+		case '0':
+			printf("Volviendo al menú principal...\n");
+			break;
+		default:
+			printf("Opción no válida.\n");
+		}
+	} while (opcion != '0');
 }
 
 // --------------------------
@@ -49,125 +50,133 @@ void ejecutarMenuAdmin(sqlite3 *db) {
 // --------------------------
 
 void listarUsuarios(sqlite3 *db) {
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT nombre, apellidos, dni, es_Admin FROM Usuario ORDER BY nombre;";
+	sqlite3_stmt *stmt;
+	const char *sql =
+			"SELECT nombre, apellidos, dni, es_Admin FROM Usuario ORDER BY nombre;";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al listar usuarios: %s\n", sqlite3_errmsg(db));
-        return;
-    }
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al listar usuarios: %s\n", sqlite3_errmsg(db));
+		return;
+	}
 
-    printf("\n--- LISTADO DE USUARIOS ---\n");
-    printf("%-20s %-20s %-12s %-10s\n", "NOMBRE", "APELLIDOS", "DNI", "TIPO");
-    printf("----------------------------------------------------\n");
+	printf("\n--- LISTADO DE USUARIOS ---\n");
+	printf("%-20s %-20s %-12s %-10s\n", "NOMBRE", "APELLIDOS", "DNI", "TIPO");
+	printf("----------------------------------------------------\n");
 
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        printf("%-20s %-20s %-12s %-10s\n",
-               sqlite3_column_text(stmt, 0),
-               sqlite3_column_text(stmt, 1),
-               sqlite3_column_text(stmt, 2),
-               sqlite3_column_int(stmt, 3) ? "Admin" : "Usuario");
-    }
-    sqlite3_finalize(stmt);
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		printf("%-20s %-20s %-12s %-10s\n", sqlite3_column_text(stmt, 0),
+				sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2),
+				sqlite3_column_int(stmt, 3) ? "Admin" : "Usuario");
+	}
+	sqlite3_finalize(stmt);
 }
 
 void eliminarUsuario(sqlite3 *db) {
-    char dni[MAX_STR];
-    printf("\nDNI del usuario a eliminar: ");
-    scanf("%19s", dni);
-    while (getchar() != '\n');
+	char dni[MAX_STR];
+	printf("\nDNI del usuario a eliminar: ");
+	scanf("%19s", dni);
+	while (getchar() != '\n')
+		;
 
-    // Verificar que no es el admin principal
-    if (strcmp(dni, "00000000A") == 0) {
-        printf("No se puede eliminar al administrador principal.\n");
-        return;
-    }
+	// Verificar que no es el admin principal
+	if (strcmp(dni, "00000000A") == 0) {
+		printf("No se puede eliminar al administrador principal.\n");
+		return;
+	}
 
-    sqlite3_stmt *stmt;
-    const char *sql = "DELETE FROM Usuario WHERE dni = ?;";
+	sqlite3_stmt *stmt;
+	const char *sql = "DELETE FROM Usuario WHERE dni = ?;";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al preparar eliminación: %s\n", sqlite3_errmsg(db));
-        return;
-    }
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar eliminación: %s\n",
+				sqlite3_errmsg(db));
+		return;
+	}
 
-    sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
 
-    if (sqlite3_step(stmt) == SQLITE_DONE) {
-        printf("Usuario eliminado correctamente.\n");
-    } else {
-        printf("Error al eliminar usuario.\n");
-    }
-    sqlite3_finalize(stmt);
+	if (sqlite3_step(stmt) == SQLITE_DONE) {
+		printf("Usuario eliminado correctamente.\n");
+	} else {
+		printf("Error al eliminar usuario.\n");
+	}
+	sqlite3_finalize(stmt);
 }
 
 void cambiarPermisosUsuario(sqlite3 *db) {
-    char dni[MAX_STR];
-    int nuevoTipo;
+	char dni[MAX_STR];
+	int nuevoTipo;
 
-    printf("\nDNI del usuario a modificar: ");
-    scanf("%19s", dni);
-    while (getchar() != '\n');
+	printf("\nDNI del usuario a modificar: ");
+	fflush(stdout);
+	scanf("%19s", dni);
+	while (getchar() != '\n')
+		;
 
-    // Verificar que no es el admin principal
-    if (strcmp(dni, "00000000A") == 0) {
-        printf("No se puede modificar al administrador principal.\n");
-        return;
-    }
+	// Verificar que no es el admin principal
+	if (strcmp(dni, "00000000A") == 0) {
+		printf("No se puede modificar al administrador principal.\n");
+		fflush(stdout);
+		return;
+	}
 
-    printf("Nuevo tipo (0=Usuario, 1=Admin): ");
-    scanf("%d", &nuevoTipo);
-    while (getchar() != '\n');
+	printf("Nuevo tipo (0=Usuario, 1=Admin): ");
+	fflush(stdout);
+	scanf("%d", &nuevoTipo);
+	while (getchar() != '\n')
+		;
 
-    sqlite3_stmt *stmt;
-    const char *sql = "UPDATE Usuario SET es_Admin = ? WHERE dni = ?;";
+	sqlite3_stmt *stmt;
+	const char *sql = "UPDATE Usuario SET es_Admin = ? WHERE dni = ?;";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
-        return;
-    }
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar actualización: %s\n",
+				sqlite3_errmsg(db));
+		return;
+	}
 
-    sqlite3_bind_int(stmt, 1, nuevoTipo);
-    sqlite3_bind_text(stmt, 2, dni, -1, SQLITE_STATIC);
+	sqlite3_bind_int(stmt, 1, nuevoTipo);
+	sqlite3_bind_text(stmt, 2, dni, -1, SQLITE_STATIC);
 
-    if (sqlite3_step(stmt) == SQLITE_DONE) {
-        printf("Permisos actualizados correctamente.\n");
-    } else {
-        printf("Error al actualizar permisos.\n");
-    }
-    sqlite3_finalize(stmt);
+	if (sqlite3_step(stmt) == SQLITE_DONE) {
+		printf("Permisos actualizados correctamente.\n");
+	} else {
+		printf("Error al actualizar permisos.\n");
+	}
+	sqlite3_finalize(stmt);
 }
 
 void gestionarUsuarios(sqlite3 *db) {
-    char opcion;
-    do {
-        printf("\n--- GESTIÓN DE USUARIOS ---\n");
-        printf("1. Listar usuarios\n");
-        printf("2. Eliminar usuario\n");
-        printf("3. Cambiar permisos\n");
-        printf("0. Volver\n");
-        printf("Opción: ");
-        fflush(stdout);
+	char opcion;
+	do {
+		printf("\n--- GESTIÓN DE USUARIOS ---\n");
+		printf("1. Listar usuarios\n");
+		printf("2. Eliminar usuario\n");
+		printf("3. Cambiar permisos\n");
+		printf("0. Volver\n");
+		printf("Opción: ");
+		fflush(stdout);
 
-        scanf(" %c", &opcion);
-        while (getchar() != '\n');
+		scanf(" %c", &opcion);
+		while (getchar() != '\n')
+			;
 
-        switch(opcion) {
-            case '1':
-                listarUsuarios(db);
-                break;
-            case '2':
-                eliminarUsuario(db);
-                break;
-            case '3':
-                cambiarPermisosUsuario(db);
-                break;
-            case '0':
-                return;
-            default:
-                printf("Opción no válida\n");
-        }
-    } while (1);
+		switch (opcion) {
+		case '1':
+			listarUsuarios(db);
+			break;
+		case '2':
+			eliminarUsuario(db);
+			break;
+		case '3':
+			cambiarPermisosUsuario(db);
+			break;
+		case '0':
+			return;
+		default:
+			printf("Opción no válida\n");
+		}
+	} while (1);
 }
 
 // --------------------------
@@ -175,122 +184,246 @@ void gestionarUsuarios(sqlite3 *db) {
 // --------------------------
 
 void agregarLibro(sqlite3 *db) {
-    Libro nuevoLibro;
-    printf("\n--- AGREGAR LIBRO ---\n");
+	Libro nuevoLibro;
+	printf("\n--- AGREGAR LIBRO ---\n");
 
-    printf("Título: ");
-    fgets(nuevoLibro.nombre, MAX_NOMBRE, stdin);  // Cambiado de titulo a nombre
-    strtok(nuevoLibro.nombre, "\n");
+	printf("Título: ");
+	fflush(stdout);
+	fgets(nuevoLibro.nombre, sizeof(nuevoLibro.nombre), stdin);
+	nuevoLibro.nombre[strcspn(nuevoLibro.nombre, "\n")] = 0;
 
-    printf("Autor: ");
-    fgets(nuevoLibro.autor, MAX_AUTOR, stdin);
-    strtok(nuevoLibro.autor, "\n");
+	printf("Autor: ");
+	fflush(stdout);
+    fgets(nuevoLibro.autor, sizeof(nuevoLibro.autor), stdin);
+    nuevoLibro.autor[strcspn(nuevoLibro.autor, "\n")] = 0;
 
-    printf("Género: ");
-    fgets(nuevoLibro.genero, MAX_GENERO, stdin);
-    strtok(nuevoLibro.genero, "\n");
 
-    nuevoLibro.estado = 1;
+	printf("Género: ");
+	fflush(stdout);
+    fgets(nuevoLibro.genero, sizeof(nuevoLibro.genero), stdin);
+    nuevoLibro.genero[strcspn(nuevoLibro.genero, "\n")] = 0;
 
-    sqlite3_stmt *stmt;
-    const char *sql = "INSERT INTO Libro (nombre, autor, genero, estado) VALUES (?, ?, ?, ?);";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al preparar inserción: %s\n", sqlite3_errmsg(db));
-        return;
-    }
+	nuevoLibro.estado = 1;
 
-    sqlite3_bind_text(stmt, 1, nuevoLibro.nombre, -1, SQLITE_STATIC);  // Cambiado aquí también
-    sqlite3_bind_text(stmt, 2, nuevoLibro.autor, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, nuevoLibro.genero, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 4, nuevoLibro.estado);
+	 int idReciclado = -1;
+	    sqlite3_stmt *stmtBuscarID;
+	    const char *sqlBuscarID = "SELECT MIN(t1.id + 1) FROM Libro t1 LEFT JOIN Libro t2 ON t1.id + 1 = t2.id WHERE t2.id IS NULL;";
 
-    if (sqlite3_step(stmt) == SQLITE_DONE) {
-        printf("Libro agregado correctamente. ID: %lld\n", sqlite3_last_insert_rowid(db));
-    } else {
-        printf("Error al agregar libro.\n");
-    }
-    sqlite3_finalize(stmt);
-}
+	    if (sqlite3_prepare_v2(db, sqlBuscarID, -1, &stmtBuscarID, NULL) == SQLITE_OK) {
+	        if (sqlite3_step(stmtBuscarID) == SQLITE_ROW) {
+	            idReciclado = sqlite3_column_int(stmtBuscarID, 0);
+	        }
+	    }
+	    sqlite3_finalize(stmtBuscarID);
+
+	    // Preparar la consulta de inserción
+	    const char *sqlInsert = idReciclado > 0
+	        ? "INSERT INTO Libro (id, nombre, autor, genero, estado) VALUES (?, ?, ?, ?, ?);"
+	        : "INSERT INTO Libro (nombre, autor, genero, estado) VALUES (?, ?, ?, ?);";
+
+	    sqlite3_stmt *stmt;
+	    if (sqlite3_prepare_v2(db, sqlInsert, -1, &stmt, NULL) != SQLITE_OK) {
+	        fprintf(stderr, "Error al preparar inserción: %s\n", sqlite3_errmsg(db));
+	        return;
+	    }
+
+	    // Vincular los valores a la consulta SQL
+	    if (idReciclado > 0) sqlite3_bind_int(stmt, 1, idReciclado);
+	    sqlite3_bind_text(stmt, idReciclado > 0 ? 2 : 1, nuevoLibro.nombre, -1, SQLITE_STATIC);
+	    sqlite3_bind_text(stmt, idReciclado > 0 ? 3 : 2, nuevoLibro.autor, -1, SQLITE_STATIC);
+	    sqlite3_bind_text(stmt, idReciclado > 0 ? 4 : 3, nuevoLibro.genero, -1, SQLITE_STATIC);
+	    sqlite3_bind_int(stmt, idReciclado > 0 ? 5 : 4, nuevoLibro.estado);
+
+	    // Ejecutar la consulta
+	    if (sqlite3_step(stmt) == SQLITE_DONE) {
+	        printf("Libro agregado correctamente. ID: %I64d\n",(long long) (idReciclado > 0 ? idReciclado : sqlite3_last_insert_rowid(db)));
+	        fflush(stdout);
+	    } else {
+	        printf("Error al agregar libro.\n");
+	    }
+
+	    sqlite3_finalize(stmt);
+	}
+
 
 void listarLibros(sqlite3 *db) {
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT id, nombre, autor, genero, estado FROM Libro ORDER BY nombre;";
+	sqlite3_stmt *stmt;
+	const char *sql =
+			"SELECT id, nombre, autor, genero, estado FROM Libro ORDER BY id;";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al listar libros: %s\n", sqlite3_errmsg(db));
-        return;
-    }
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al listar libros: %s\n", sqlite3_errmsg(db));
+		return;
+	}
 
-    printf("\n--- CATÁLOGO DE LIBROS ---\n");
-    printf("%-5s %-30s %-20s %-15s %-10s\n", "ID", "TÍTULO", "AUTOR", "GÉNERO", "ESTADO");
-    printf("----------------------------------------------------------------\n");
+	printf("\n--- CATÁLOGO DE LIBROS ---\n");
+	printf("%-5s %-30s %-20s %-15s %-10s\n", "ID", "TÍTULO", "AUTOR", "GÉNERO",
+			"ESTADO");
+	printf(
+			"----------------------------------------------------------------\n");
 
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        printf("%-5d %-30s %-20s %-15s %-10s\n",
-               sqlite3_column_int(stmt, 0),
-               sqlite3_column_text(stmt, 1),
-               sqlite3_column_text(stmt, 2),
-               sqlite3_column_text(stmt, 3),
-               sqlite3_column_int(stmt, 4) ? "Disponible" : "Prestado");
-    }
-    sqlite3_finalize(stmt);
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		printf("%-5d %-30s %-20s %-15s %-10s\n", sqlite3_column_int(stmt, 0),
+				sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2),
+				sqlite3_column_text(stmt, 3),
+				sqlite3_column_int(stmt, 4) ? "Disponible" : "Prestado");
+	}
+	sqlite3_finalize(stmt);
 }
 
 void eliminarLibro(sqlite3 *db) {
-    int id;
-    printf("\nID del libro a eliminar: ");
-    scanf("%d", &id);
-    while (getchar() != '\n');
+	int id;
+	printf("\nID del libro a eliminar: ");
+	fflush(stdout);
+	scanf("%d", &id);
+	while (getchar() != '\n')
+		;
 
-    sqlite3_stmt *stmt;
-    const char *sql = "DELETE FROM Libro WHERE id = ?;";
+	sqlite3_stmt *stmt;
+	const char *sql = "DELETE FROM Libro WHERE id = ?;";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "Error al preparar eliminación: %s\n", sqlite3_errmsg(db));
-        return;
-    }
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar eliminación: %s\n",
+				sqlite3_errmsg(db));
+		return;
+	}
 
-    sqlite3_bind_int(stmt, 1, id);
+	sqlite3_bind_int(stmt, 1, id);
 
-    if (sqlite3_step(stmt) == SQLITE_DONE) {
-        printf("Libro eliminado correctamente.\n");
-    } else {
-        printf("Error al eliminar libro.\n");
-    }
-    sqlite3_finalize(stmt);
+	if (sqlite3_step(stmt) == SQLITE_DONE) {
+		printf("Libro eliminado correctamente.\n");
+	} else {
+		printf("Error al eliminar libro.\n");
+	}
+	sqlite3_finalize(stmt);
+}
+
+void editarLibro(sqlite3 *db) {
+	int idLibro;
+	char nuevoTitulo[MAX_NOMBRE];
+	char nuevoAutor[MAX_NOMBRE];
+	char nuevoGenero[MAX_NOMBRE];
+	//
+	listarLibros(db);
+	printf("Elija un libro, introduciendo su ID: ");
+	fflush(stdout);
+	scanf("%d", &idLibro);
+	while (getchar() != '\n');
+
+	sqlite3_stmt *stmt;
+	    const char *sql_verificar = "SELECT COUNT(*) FROM Libro WHERE id = ?;";
+
+	    if (sqlite3_prepare_v2(db, sql_verificar, -1, &stmt, NULL) != SQLITE_OK) {
+	        fprintf(stderr, "Error al verificar libro: %s\n", sqlite3_errmsg(db));
+	        return;
+	    }
+
+	    sqlite3_bind_int(stmt, 1, idLibro);
+
+	    if (sqlite3_step(stmt) != SQLITE_ROW || sqlite3_column_int(stmt, 0) == 0) {
+	        printf("Error: No existe un libro con el ID %d.\n", idLibro);
+	        sqlite3_finalize(stmt);
+	        return;
+	    }
+
+	    sqlite3_finalize(stmt);
+
+	    // Pedir nuevos datos
+	    printf("Nuevo título (deje en blanco para no cambiar): ");
+	    fflush(stdout);
+	    fgets(nuevoTitulo, sizeof(nuevoTitulo), stdin);
+	    nuevoTitulo[strcspn(nuevoTitulo, "\n")] = 0;
+
+	    printf("Nuevo autor (deje en blanco para no cambiar): ");
+	    fflush(stdout);
+	    fgets(nuevoAutor, sizeof(nuevoAutor), stdin);
+	    nuevoAutor[strcspn(nuevoAutor, "\n")] = 0;
+
+	    printf("Nuevo género (deje en blanco para no cambiar): ");
+	    fflush(stdout);
+	    fgets(nuevoGenero, sizeof(nuevoGenero), stdin);
+	    nuevoGenero[strcspn(nuevoGenero, "\n")] = 0;
+
+	    //si el usuario deja algún campo vacío
+	    const char *sql_obtener = "SELECT nombre, autor, genero FROM Libro WHERE id = ?;";
+
+	    if (sqlite3_prepare_v2(db, sql_obtener, -1, &stmt, NULL) != SQLITE_OK) {
+	        fprintf(stderr, "Error al obtener datos del libro: %s\n", sqlite3_errmsg(db));
+	        return;
+	    }
+
+	    sqlite3_bind_int(stmt, 1, idLibro);
+
+	    if (sqlite3_step(stmt) == SQLITE_ROW) {
+	        if (strlen(nuevoTitulo) == 0) strcpy(nuevoTitulo, (const char *)sqlite3_column_text(stmt, 0));
+	        if (strlen(nuevoAutor) == 0) strcpy(nuevoAutor, (const char *)sqlite3_column_text(stmt, 1));
+	        if (strlen(nuevoGenero) == 0) strcpy(nuevoGenero, (const char *)sqlite3_column_text(stmt, 2));
+	    }
+
+	    sqlite3_finalize(stmt);
+
+	    // Actualizar el libro en la base de datos
+	    const char *sql_actualizar = "UPDATE Libro SET nombre = ?, autor = ?, genero = ? WHERE id = ?;";
+
+	    if (sqlite3_prepare_v2(db, sql_actualizar, -1, &stmt, NULL) != SQLITE_OK) {
+	        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+	        return;
+	    }
+
+	    sqlite3_bind_text(stmt, 1, nuevoTitulo, -1, SQLITE_STATIC);
+	    sqlite3_bind_text(stmt, 2, nuevoAutor, -1, SQLITE_STATIC);
+	    sqlite3_bind_text(stmt, 3, nuevoGenero, -1, SQLITE_STATIC);
+	    sqlite3_bind_int(stmt, 4, idLibro);
+
+	    if (sqlite3_step(stmt) == SQLITE_DONE) {
+	        printf("Libro editado correctamente :) .\n");
+	        fflush(stdout);
+	    } else {
+	        printf("Error al editar el libro :(.\n");
+	        fflush(stdout);
+	    }
+
+	    sqlite3_finalize(stmt);
+
+
 }
 
 void gestionarLibros(sqlite3 *db) {
-    char opcion;
-    do {
-        printf("\n--- GESTIÓN DE LIBROS ---\n");
-        printf("1. Listar libros\n");
-        printf("2. Agregar libro\n");
-        printf("3. Eliminar libro\n");
-        printf("0. Volver\n");
-        printf("Opción: ");
-        fflush(stdout);
+	char opcion;
+	do {
+		printf("\n--- GESTIÓN DE LIBROS ---\n");
+		printf("1. Listar libros\n");
+		printf("2. Agregar libro\n");
+		printf("3. Eliminar libro\n");
+		printf("4. Editar Información de un libro\n");
+		printf("0. Volver\n");
+		printf("Opción: ");
+		fflush(stdout);
 
-        scanf(" %c", &opcion);
-        while (getchar() != '\n');
+		scanf(" %c", &opcion);
+		while (getchar() != '\n')
+			;
 
-        switch(opcion) {
-            case '1':
-                listarLibros(db);
-                break;
-            case '2':
-                agregarLibro(db);
-                break;
-            case '3':
-                eliminarLibro(db);
-                break;
-            case '0':
-                return;
-            default:
-                printf("Opción no válida\n");
-        }
-    } while (1);
+		switch (opcion) {
+		case '1':
+			listarLibros(db);
+			break;
+		case '2':
+			agregarLibro(db);
+			break;
+		case '3':
+			eliminarLibro(db);
+			break;
+		case '4':
+			editarLibro(db);
+			break;
+		case '0':
+			return;
+		default:
+			printf("Opción no válida\n");
+		}
+	} while (1);
 }
 
 // --------------------------
@@ -298,42 +431,42 @@ void gestionarLibros(sqlite3 *db) {
 // --------------------------
 
 void verEstadisticas(sqlite3 *db) {
-    printf("\n--- ESTADÍSTICAS DE LA BIBLIOTECA ---\n");
+	printf("\n--- ESTADÍSTICAS DE LA BIBLIOTECA ---\n");
 
-    // Total usuarios
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT COUNT(*) FROM Usuario;";
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("Total usuarios: %d\n", sqlite3_column_int(stmt, 0));
-        }
-        sqlite3_finalize(stmt);
-    }
+	// Total usuarios
+	sqlite3_stmt *stmt;
+	const char *sql = "SELECT COUNT(*) FROM Usuario;";
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+		if (sqlite3_step(stmt) == SQLITE_ROW) {
+			printf("Total usuarios: %d\n", sqlite3_column_int(stmt, 0));
+		}
+		sqlite3_finalize(stmt);
+	}
 
-    // Total libros
-    sql = "SELECT COUNT(*) FROM Libro;";
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("Total libros: %d\n", sqlite3_column_int(stmt, 0));
-        }
-        sqlite3_finalize(stmt);
-    }
+	// Total libros
+	sql = "SELECT COUNT(*) FROM Libro;";
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+		if (sqlite3_step(stmt) == SQLITE_ROW) {
+			printf("Total libros: %d\n", sqlite3_column_int(stmt, 0));
+		}
+		sqlite3_finalize(stmt);
+	}
 
-    // Libros prestados
-    sql = "SELECT COUNT(*) FROM Libro WHERE estado = 0;";
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("Libros prestados: %d\n", sqlite3_column_int(stmt, 0));
-        }
-        sqlite3_finalize(stmt);
-    }
+	// Libros prestados
+	sql = "SELECT COUNT(*) FROM Libro WHERE estado = 0;";
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+		if (sqlite3_step(stmt) == SQLITE_ROW) {
+			printf("Libros prestados: %d\n", sqlite3_column_int(stmt, 0));
+		}
+		sqlite3_finalize(stmt);
+	}
 
-    // Préstamos activos
-    sql = "SELECT COUNT(*) FROM Prestamo WHERE fecha_Devolucion IS NULL;";
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-        if (sqlite3_step(stmt) == SQLITE_ROW) {
-            printf("Préstamos activos: %d\n", sqlite3_column_int(stmt, 0));
-        }
-        sqlite3_finalize(stmt);
-    }
+	// Préstamos activos
+	sql = "SELECT COUNT(*) FROM Prestamo WHERE fecha_Devolucion IS NULL;";
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+		if (sqlite3_step(stmt) == SQLITE_ROW) {
+			printf("Préstamos activos: %d\n", sqlite3_column_int(stmt, 0));
+		}
+		sqlite3_finalize(stmt);
+	}
 }

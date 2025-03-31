@@ -1,5 +1,7 @@
 #include "bd.h"
 #include <stdio.h>
+#include <string.h>
+#include "libro.h"
 
 int inicializarBD(sqlite3 **db) {
 	int result;
@@ -82,4 +84,100 @@ void crearTablas(sqlite3 *db) {
             fprintf(stderr, "Error al insertar admin: %s\n", errMsg);
             sqlite3_free(errMsg);
         }
+
+    insertarLibrosBase(db);
+}
+
+void insertarLibrosBase(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    const char *sql = "INSERT INTO Libro (nombre, autor, genero, estado) "
+                     "SELECT ?, ?, ?, ? "
+                     "WHERE NOT EXISTS (SELECT 1 FROM Libro WHERE nombre = ? AND autor = ?);";
+
+    Libro libros[] = {
+        {"Cien años de soledad", "Gabriel García Márquez", "Realismo mágico", 0, 1},
+        {"1984", "George Orwell", "Ciencia ficción", 0, 1},
+        {"El señor de los anillos", "J.R.R. Tolkien", "Fantasía", 0, 1},
+        {"Orgullo y prejuicio", "Jane Austen", "Romance", 0, 1},
+        {"Crimen y castigo", "Fiódor Dostoyevski", "Novela psicológica", 0, 1}
+    };
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    int numLibros = sizeof(libros) / sizeof(libros[0]);
+
+    for (int i = 0; i < numLibros; i++) {
+        sqlite3_bind_text(stmt, 1, libros[i].nombre, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, libros[i].autor, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, libros[i].genero, -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 4, libros[i].estado);
+        sqlite3_bind_text(stmt, 5, libros[i].nombre, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 6, libros[i].autor, -1, SQLITE_STATIC);
+
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            fprintf(stderr, "Error al insertar libro %s: %s\n",
+                    libros[i].nombre, sqlite3_errmsg(db));
+        }
+
+        sqlite3_reset(stmt);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void buscar_libros_por_titulo(sqlite3 *db,const char *titulo_buscar) {
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT id, nombre, autor, genero, estado FROM Libro WHERE nombre LIKE ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        printf("Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    // Preparar el patrón de búsqueda (con % para buscar partes del título)
+    char patron[100];
+    snprintf(patron, sizeof(patron), "%%%s%%", titulo_buscar);
+    sqlite3_bind_text(stmt, 1, patron, -1, SQLITE_TRANSIENT);
+
+    printf("\nResultados para '%s':\n", titulo_buscar);
+    printf("ID\tTítulo\t\t\tAutor\t\tGénero\t\tEstado\n");
+    printf("----------------------------------------------------------------\n");
+
+    int encontrados = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        Libro libro;
+
+        libro.id = sqlite3_column_int(stmt, 0);
+        const char *nombre = (const char *)sqlite3_column_text(stmt, 1);
+        const char *autor = (const char *)sqlite3_column_text(stmt, 2);
+        const char *genero = (const char *)sqlite3_column_text(stmt, 3);
+        libro.estado = sqlite3_column_int(stmt, 4);
+
+        strncpy(libro.nombre, nombre, MAX_NOMBRE - 1);
+        libro.nombre[MAX_NOMBRE - 1] = '\0';
+
+        strncpy(libro.autor, autor, MAX_AUTOR - 1);
+        libro.autor[MAX_AUTOR - 1] = '\0';
+
+        strncpy(libro.genero, genero, MAX_GENERO - 1);
+        libro.genero[MAX_GENERO - 1] = '\0';
+
+        printf("%d\t%.20s\t%.15s\t%.10s\t%s\n",
+               libro.id,
+               libro.nombre,
+               libro.autor,
+               libro.genero,
+               libro.estado == 1 ? "Disponible" : "Prestado");
+
+        encontrados++;
+    }
+
+    if (encontrados == 0) {
+        printf("No se encontraron libros con ese título\n");
+    }
+
+    sqlite3_finalize(stmt);
 }
