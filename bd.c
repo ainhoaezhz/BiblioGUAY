@@ -181,3 +181,29 @@ void buscar_libros_por_titulo(sqlite3 *db,const char *titulo_buscar) {
 
     sqlite3_finalize(stmt);
 }
+
+void listarLibrosDisponibles(sqlite3 *db) {
+	sqlite3_stmt *stmt;
+	const char *sql = "SELECT id, nombre, autor, genero FROM Libro WHERE estado = 1 ORDER BY nombre;";
+
+	if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al listar libros disponibles: %s\n", sqlite3_errmsg(db));
+		return;
+	}
+
+	 printf("\n--- LIBROS DISPONIBLES ---\n");
+	 printf("%-5s %-30s %-25s %-15s\n", "ID", "TÍTULO", "AUTOR", "GÉNERO");
+     printf("----------------------------------------------------------------------\n");
+
+     int encontrados = 0;
+     while(sqlite3_step(stmt) == SQLITE_ROW) {
+    	 encontrados = 1;
+    	 printf("%-5d %-30s %-25s %-15s\n", sqlite3_column_int(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_text(stmt, 2), sqlite3_column_text(stmt, 3));
+     }
+
+     if(!encontrados) {
+    	 printf("No hay libros libros disponibles.\n");
+     }
+
+     sqlite3_finalize(stmt);
+}

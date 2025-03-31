@@ -187,6 +187,10 @@ void iniciarSesion() {
 		case '5':
 			printf("Devolviendo libros...\n");
 			break;
+		case '6':
+			printf("Listando libros disponibles...\n");
+			listarLibrosDisponibles(db);
+			break;
 		case '0':
 			printf("Saliendo...\n");
 			break;
@@ -206,14 +210,13 @@ char menuUsuario() {
 	printf("3. Buscar libros\n");
 	printf("4. Historial de prestamos\n");
 	printf("5. Devolver libros\n");
+	printf("6. Listado de libros disponibles\n");
 	printf("0. Salir\n");
 	printf("Elige una opcion: ");
 	fflush(stdout);
 
 	scanf(" %c", &opcionMenu);
-
-	while (getchar() != '\n')
-		;
+	while (getchar() != '\n');
 
 	return opcionMenu;
 }

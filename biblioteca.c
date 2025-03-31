@@ -23,6 +23,3 @@ void cargarDatosDesdeArchivo(){
 void cerrarBibloiteca(){
 	printf("cerrando biblioteca");
 }
-
-
-//esto es una prueba
