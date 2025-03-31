@@ -27,30 +27,9 @@ int main() {
 			break;
 		}
 		case '2': {
-			char opcionRegistro;
-			do {
-				opcionRegistro = menuRegistro();
-				switch (opcionRegistro) {
-				case '1':
-					printf("Registrando Administrador...\n");
-					fflush(stdout);
-					break;
-				case '2':
-					printf("Registrando Usuario Normal...\n");
-					fflush(stdout);
-					break;
-				case '0':
-					printf("Volviendo al menú principal...\n");
-					fflush(stdout);
-					break;
-				default:
-					printf("ERROR! Opción incorrecta\n");
-					fflush(stdout);
-				}
-			} while (opcionRegistro != '0');
+			registrarse(db);
 			break;
 		}
-
 		case '0':
 			printf("Hasta la próxima\n");
 			fflush(stdout);

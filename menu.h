@@ -11,7 +11,6 @@
 #include "sqlite3.h"  // Incluye el encabezado de SQLite3
 
 char menuPrincipal();
-char menuRegistro();
 void iniciarSesion();
 void registrarse(sqlite3 *db);
 char menuUsuario();
