@@ -6,6 +6,7 @@
 #include "bd.h"
 #include "menuAdmin.h"
 #include "libro.h"
+#include <ctype.h>
 
 #ifdef _WIN32
 #include <conio.h> //Windows
@@ -153,6 +154,7 @@ void iniciarSesion() {
 		    char titulo[MAX_NOMBRE];
 		    scanf("%29s", titulo);
 		    buscar_libros_por_titulo(db, titulo);
+			menu_alquiler();
 		    break;
 		case '4':
 			printf("Historial de préstamos...\n");
@@ -320,4 +322,58 @@ int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin) {
 
 	sqlite3_finalize(stmt);
 	return resultado;
+}
+
+
+void menu_alquiler() {
+    char opcion;
+    char respuesta;
+    
+    printf("\n=== MENÚ DE ALQUILER ===\n");
+    
+    do {
+        printf("\n¿Qué deseas hacer?\n");
+        printf("1. Alquilar libro\n");
+        printf("2. No alquilar\n");
+        printf("3. Volver atrás\n");
+        printf("Elige una opción (1-3): ");
+        
+        scanf(" %c", &opcion);
+        getchar();
+        
+        switch(opcion) {
+            case '1':
+                printf("\nProcediendo con el alquiler del libro...\n");
+                // Lógica de alquiler aquí
+                printf("¡Libro alquilado con éxito!\n");
+                return;
+                
+            case '2':
+                printf("\nEntendido, no alquilarás ningún libro.\n");
+                
+                do {
+                    printf("¿Quieres volver al menú de alquiler? (s/n): ");
+                    scanf(" %c", &respuesta);
+                    getchar();
+                    
+                    // Conversión a minúscula (ahora con ctype.h incluido)
+                    respuesta = tolower(respuesta);
+                    
+                    if(respuesta == 's') break;
+                    if(respuesta == 'n') {
+                        printf("\nVolviendo al menú principal...\n");
+                        return;
+                    }
+                    printf("Opción no válida. ");
+                } while(1);
+                break;
+                
+            case '3':
+                printf("\nVolviendo al menú principal...\n");
+                return;
+                
+            default:
+                printf("\nOpción no válida. Por favor elige 1, 2 o 3.\n");
+        }
+    } while(1);
 }

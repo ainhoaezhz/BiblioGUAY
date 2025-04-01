@@ -15,7 +15,7 @@ typedef struct {
 	char autor[MAX_AUTOR];
 	char genero[MAX_GENERO];
 	int id;
-	int estado; // 0: No disponible, 1: Disponible
+	int estado; // 1: No disponible, 0: Disponible
 
 } Libro;
 
