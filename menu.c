@@ -7,6 +7,7 @@
 #include "menuAdmin.h"
 #include "libro.h"
 #include <ctype.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #include <conio.h> //Windows
@@ -174,6 +175,8 @@ void iniciarSesion() {
 			break;
 		case '5':
 			printf("Devolviendo libros...\n");
+			devolver_libro(db, usuario);
+
 			break;
 		case '6':
 			printf("Listando libros disponibles...\n");
@@ -486,4 +489,153 @@ void registrar_prestamo_nuevo(sqlite3 *db) {
     
     printf("\n¡Préstamo registrado con éxito!\n");
     printf("Libro ID: %d\nUsuario DNI: %s\n", libro_id, dni_usuario);
+}
+
+
+void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
+    sqlite3_stmt *stmt;
+    char dni_usuario[20];
+    int prestamo_id;
+    int libro_id;
+    int rc;
+    
+    printf("\n--- PROCESO DE DEVOLUCIÓN DE LIBRO ---\n");
+    
+    // 1. Obtener DNI del usuario a partir del nombre
+    const char *sql_obtener_dni = "SELECT dni FROM Usuario WHERE nombre = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_obtener_dni, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    sqlite3_bind_text(stmt, 1, nombre_usuario, -1, SQLITE_STATIC);
+    
+    if(sqlite3_step(stmt) != SQLITE_ROW) {
+        printf("No se encontró ningún usuario con el nombre '%s'.\n", nombre_usuario);
+        sqlite3_finalize(stmt);
+        return;
+    }
+    
+    strncpy(dni_usuario, (const char*)sqlite3_column_text(stmt, 0), sizeof(dni_usuario)-1);
+    dni_usuario[sizeof(dni_usuario)-1] = '\0';
+    sqlite3_finalize(stmt);
+    
+    printf("Usuario encontrado: DNI %s\n", dni_usuario);
+    
+    // 2. Mostrar préstamos activos del usuario (fecha_Devolucion IS NULL)
+    printf("\nPréstamos activos:\n");
+    printf("ID\tLibroID\tTítulo\t\tFecha Préstamo\n");
+    
+    const char *sql_prestamos = "SELECT p.id, p.libro_id, l.nombre, p.fecha_Prestamo "
+                               "FROM Prestamo p JOIN Libro l ON p.libro_id = l.id "
+                               "WHERE p.usuario_dni = ? AND p.fecha_Devolucion IS NULL;";
+    
+    if(sqlite3_prepare_v2(db, sql_prestamos, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al consultar préstamos: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    sqlite3_bind_text(stmt, 1, dni_usuario, -1, SQLITE_STATIC);
+    
+    bool tiene_prestamos = false;
+    while(sqlite3_step(stmt) == SQLITE_ROW) {
+        printf("%d\t%d\t%s\t%s\n", 
+              sqlite3_column_int(stmt, 0),
+              sqlite3_column_int(stmt, 1),
+              sqlite3_column_text(stmt, 2),
+              sqlite3_column_text(stmt, 3));
+        tiene_prestamos = true;
+    }
+    sqlite3_finalize(stmt);
+    
+    if(!tiene_prestamos) {
+        printf("El usuario no tiene préstamos activos.\n");
+        return;
+    }
+    
+    // 3. Solicitar ID del préstamo a devolver
+    printf("\nIntroduzca el ID del préstamo que desea devolver: ");
+    if(scanf("%d", &prestamo_id) != 1) {
+        printf("Entrada inválida.\n");
+        while(getchar() != '\n'); // Limpiar buffer
+        return;
+    }
+    getchar(); // Limpiar el '\n' restante
+    
+    // 4. Verificar que el préstamo pertenece al usuario
+    const char *sql_verificar = "SELECT libro_id FROM Prestamo WHERE id = ? AND usuario_dni = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_verificar, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, prestamo_id);
+    sqlite3_bind_text(stmt, 2, dni_usuario, -1, SQLITE_STATIC);
+    
+    if(sqlite3_step(stmt) != SQLITE_ROW) {
+        printf("El ID de préstamo no corresponde a este usuario.\n");
+        sqlite3_finalize(stmt);
+        return;
+    }
+    
+    libro_id = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    
+    // 5. Procesar la devolución (usar transacción)
+    rc = sqlite3_exec(db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "Error al iniciar transacción: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    // Marcar préstamo como devuelto (establecer fecha_Devolucion)
+    const char *sql_devolver = "UPDATE Prestamo SET fecha_Devolucion = date('now') WHERE id = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_devolver, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, prestamo_id);
+    
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        fprintf(stderr, "Error al actualizar préstamo: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    
+    // Marcar libro como disponible (estado = 1)
+    const char *sql_actualizar_libro = "UPDATE Libro SET estado = 1 WHERE id = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_actualizar_libro, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, libro_id);
+    
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        fprintf(stderr, "Error al actualizar libro: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    
+    // Confirmar transacción
+    rc = sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "Error al confirmar transacción: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    printf("\n¡Devolución realizada con éxito!\n");
+    printf("Préstamo ID: %d\nLibro ID: %d\n", prestamo_id, libro_id);
 }
