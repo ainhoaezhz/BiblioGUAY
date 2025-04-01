@@ -15,7 +15,6 @@ void crearTablas(sqlite3 *db) {
     char *errMsg = 0;
     char sql[512];
 
-    // Crear tabla Libro
     snprintf(sql, sizeof(sql),
             "CREATE TABLE IF NOT EXISTS Libro ("
             "nombre VARCHAR(100), "
@@ -29,7 +28,6 @@ void crearTablas(sqlite3 *db) {
         sqlite3_free(errMsg);
     }
 
-    // Crear tabla Usuario
     snprintf(sql, sizeof(sql),
             "CREATE TABLE IF NOT EXISTS Usuario ("
             "nombre VARCHAR(100), "
@@ -63,7 +61,6 @@ void crearTablas(sqlite3 *db) {
             sqlite3_free(errMsg);
         }
 
-    // Insertar usuario admin si no existe
     snprintf(sql, sizeof(sql),
             "INSERT INTO Usuario (nombre, apellidos, dni, direccion, email, telefono, contrasena, es_Admin) "
             "SELECT 'admin', 'admin', '00000000A', 'admin', 'admin@admin.com', '000000000', 'admin', 1 "
@@ -177,7 +174,6 @@ void buscar_libros_por_titulo(sqlite3 *db,const char *titulo_buscar) {
         return;
     }
 
-    // Preparar el patrón de búsqueda (con % para buscar partes del título)
     char patron[100];
     snprintf(patron, sizeof(patron), "%%%s%%", titulo_buscar);
     sqlite3_bind_text(stmt, 1, patron, -1, SQLITE_TRANSIENT);

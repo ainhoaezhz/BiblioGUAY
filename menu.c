@@ -5,19 +5,19 @@
 #include "sqlite3.h"
 #include "bd.h"
 #include "menuAdmin.h"
+#include "libro.h"
 
 #ifdef _WIN32
-#include <conio.h> // Para Windows (ocultar contraseña)
+#include <conio.h> //Windows
 #else
-#include <termios.h> // Para Linux/Mac
+#include <termios.h> //Linux/Mac
 #include <unistd.h>
 #include "bd.h"
 #endif
 
-#define MAX 80 // Tamaño máximo para username y password
-#define MAX_STR 100 // Tamaño máximo para strings largos como nombre, apellidos, etc.
+#define MAX 80
+#define MAX_STR 100
 
-// Función para leer la contraseña y mostrar asteriscos
 void leerContrasena(char *password) {
     int i = 0;
     char ch;
@@ -69,7 +69,7 @@ void leerContrasena(char *password) {
 #endif
 
     password[i] = '\0';
-    printf("\nContraseña ingresada correctamente.\n");  // 🔴 Mensaje de depuración
+    printf("\nContraseña ingresada correctamente.\n");
     fflush(stdout);
 }
 
@@ -135,7 +135,6 @@ void iniciarSesion() {
 	} while (1);
 
 	char opcionMenu;
-	char *titulo;
 	do {
 		opcionMenu = menuUsuario();
 		switch (opcionMenu) {
@@ -148,16 +147,16 @@ void iniciarSesion() {
 			editarUsuario(db, usuario);
 			break;
 		case '3':
-			printf("Buscando libros...\n");
-			printf("Introduzca el título del libro:");
-			fflush(stdout);
-			scanf("%30s", titulo);
-			buscar_libros_por_titulo(db, titulo);
-			break;
+		    printf("Buscando libros...\n");
+		    printf("Introduzca el título del libro:");
+		    fflush(stdout);
+		    char titulo[MAX_NOMBRE];
+		    scanf("%29s", titulo);
+		    buscar_libros_por_titulo(db, titulo);
+		    break;
 		case '4':
 			printf("Historial de préstamos...\n");
 			{
-				// Necesitamos obtener el DNI del usuario actual
 				sqlite3_stmt *stmt;
 				const char *sql = "SELECT dni FROM Usuario WHERE nombre = ?;";
 				if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
@@ -290,12 +289,10 @@ int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
 		return 0;
 	}
 
-	// Bind de los parámetros
 	sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, contrasena, -1, SQLITE_STATIC);
 
-	// Ejecutar consulta
-	int autenticado = (sqlite3_step(stmt) == SQLITE_ROW); // Devuelve 1 si encuentra una coincidencia
+	int autenticado = (sqlite3_step(stmt) == SQLITE_ROW);
 
 	sqlite3_finalize(stmt);
 	return autenticado;
