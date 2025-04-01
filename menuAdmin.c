@@ -771,7 +771,6 @@ void generarInformes(sqlite3 *db) {
         printf("c. Usuarios con más préstamos\n");
         printf("d. Libro más prestado\n");
         printf("e. Préstamos vencidos\n");
-        printf("f. Gestionar devoluciones y préstamos\n");
         printf("0. Volver\n");
         printf("Opción: ");
         fflush(stdout);
@@ -794,9 +793,6 @@ void generarInformes(sqlite3 *db) {
             break;
         case 'e':
             mostrar_prestamos_vencidos(db);
-            break;
-        case 'f':
-            gestionarPrestamosDevoluciones(db);
             break;
         case '0':
             return;
