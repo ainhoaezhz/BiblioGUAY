@@ -92,13 +92,17 @@ void crearTablas(sqlite3 *db) {
 void insertarPrestamosBase(sqlite3 *db) {
     sqlite3_stmt *stmt;
     const char *sql = "INSERT INTO Prestamo (usuario_dni, libro_id, fecha_Prestamo, fecha_Devolucion) "
-                     "VALUES (?, ?, ?, ?);";
+                     "SELECT ?, ?, ?, ? "
+                     "WHERE NOT EXISTS ("
+                     "    SELECT 1 FROM Prestamo "
+                     "    WHERE usuario_dni = ? AND libro_id = ? AND fecha_Prestamo = ?"
+                     ");";
 
     Prestamo prestamos[] = {
-        {"12345678A", 1, "2023-10-01", "2023-10-15"},
-        {"87654321B", 2, "2023-10-05", "2023-10-20"},
-        {"11223344C", 3, "2023-10-10", ""},  // NULL
-        {"12345678A", 4, "2023-11-01", "2023-11-10"}
+        {"00000000A", 1, "2023-10-01", "2023-10-15"},
+        {"56289643N", 2, "2023-10-05", "2023-10-20"},
+        {"00000000A", 3, "2023-10-10", ""},  // NULL
+        {"79365851G", 4, "2023-11-01", "2023-11-10"}
     };
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
@@ -117,8 +121,20 @@ void insertarPrestamosBase(sqlite3 *db) {
             sqlite3_bind_null(stmt, 4);
         }
 
+        sqlite3_bind_text(stmt, 5, prestamos[i].usuario_dni, -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 6, prestamos[i].libro_id);
+        sqlite3_bind_text(stmt, 7, prestamos[i].fecha_prestamo, -1, SQLITE_STATIC);
+
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             fprintf(stderr, "Error al insertar préstamo: %s\n", sqlite3_errmsg(db));
+        } else {
+            if (sqlite3_changes(db) > 0) {
+                printf("Préstamo insertado: Usuario %s, Libro %d, Fecha %s\n",
+                       prestamos[i].usuario_dni, prestamos[i].libro_id, prestamos[i].fecha_prestamo);
+            } else {
+                printf("Préstamo duplicado omitido: Usuario %s, Libro %d, Fecha %s\n",
+                       prestamos[i].usuario_dni, prestamos[i].libro_id, prestamos[i].fecha_prestamo);
+            }
         }
         sqlite3_reset(stmt);
     }
