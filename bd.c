@@ -247,3 +247,4 @@ void listarLibrosDisponibles(sqlite3 *db) {
 
      sqlite3_finalize(stmt);
 }
+

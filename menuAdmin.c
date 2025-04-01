@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "sqlite3.h"
+#include <stdbool.h>
+
 
 char menuAdministrador() {
 	char opcion;
@@ -615,6 +617,7 @@ void gestionarPrestamosDevoluciones(sqlite3 *db) {
 			registrarPrestamo(db);
 			break;
 		case '2':
+			registrarDevolucion(db);
 			break;
 		case '3':
 			break;
@@ -692,6 +695,81 @@ void registrarPrestamo(sqlite3 *db) {
               (long long)(idReciclado > 0 ? idReciclado : sqlite3_last_insert_rowid(db)));
     } else {
         fprintf(stderr, "Error al agregar préstamo: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+}
+
+void registrarDevolucion(sqlite3 *db) {
+    char dniUsuario[20];
+    printf("\n--- REGISTRAR DEVOLUCIÓN ---\n");
+    printf("Ingrese DNI del usuario: ");
+    fgets(dniUsuario, sizeof(dniUsuario), stdin);
+    dniUsuario[strcspn(dniUsuario, "\n")] = 0;  // Eliminar salto de línea
+
+    // Consulta para buscar préstamos activos del usuario
+    const char *sql = "SELECT p.id, l.nombre, p.fecha_Prestamo "
+                     "FROM Prestamo p "
+                     "JOIN Libro l ON p.libro_id = l.id "
+                     "WHERE p.usuario_dni = ? AND p.fecha_Devolucion IS NULL;";
+
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    sqlite3_bind_text(stmt, 1, dniUsuario, -1, SQLITE_STATIC);
+
+    bool tienePrestamos = false;
+    printf("\nPréstamos activos para DNI %s:\n", dniUsuario);
+    printf("--------------------------------\n");
+    printf("ID\tLibro\t\tFecha Préstamo\n");
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        tienePrestamos = true;
+        int idPrestamo = sqlite3_column_int(stmt, 0);
+        const char *nombreLibro = (const char *)sqlite3_column_text(stmt, 1);
+        const char *fechaPrestamo = (const char *)sqlite3_column_text(stmt, 2);
+
+        printf("%d\t%s\t%s\n", idPrestamo, nombreLibro, fechaPrestamo);
+    }
+
+    sqlite3_finalize(stmt);
+
+    if (!tienePrestamos) {
+        printf("No hay préstamos activos para este usuario.\n");
+        return;
+    }
+
+    // Pedir ID del préstamo a devolver
+    int idPrestamoDevolucion;
+    printf("\nIngrese ID del préstamo a devolver: ");
+    scanf("%d", &idPrestamoDevolucion);
+    getchar();  // Limpiar el buffer del '\n' después de scanf
+
+    // Actualizar la fecha de devolución (usando fecha actual)
+    const char *sqlUpdate = "UPDATE Prestamo SET fecha_Devolucion = date('now') "
+                           "WHERE id = ? AND usuario_dni = ? AND fecha_Devolucion IS NULL;";
+
+    if (sqlite3_prepare_v2(db, sqlUpdate, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, idPrestamoDevolucion);
+    sqlite3_bind_text(stmt, 2, dniUsuario, -1, SQLITE_STATIC);
+
+    if (sqlite3_step(stmt) == SQLITE_DONE) {
+        int cambios = sqlite3_changes(db);
+        if (cambios > 0) {
+            printf("\n¡Devolución registrada con éxito!\n");
+        } else {
+            printf("\nError: No se pudo registrar la devolución.\n");
+            printf("Verifique que el ID y DNI sean correctos.\n");
+        }
+    } else {
+        fprintf(stderr, "Error al ejecutar actualización: %s\n", sqlite3_errmsg(db));
     }
 
     sqlite3_finalize(stmt);

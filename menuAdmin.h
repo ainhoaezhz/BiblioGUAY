@@ -14,5 +14,6 @@ void mostrarUsuarioConMasPrestamos(sqlite3 *db);
 void mostrarLibroMasPrestado(sqlite3 *db);
 void gestionarPrestamosDevoluciones(sqlite3 *db);
 void registrarPrestamo(sqlite3 *db);
+void registrarDevolucion(sqlite3 *db);
 
 #endif
