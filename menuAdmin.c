@@ -1,6 +1,8 @@
 #include "menuAdmin.h"
 #include "usuario.h"
 #include "libro.h"
+#include "prestamo.h"
+#include <stdlib.h>
 #include "bd.h"
 #include <stdio.h>
 #include <string.h>
@@ -610,6 +612,7 @@ void gestionarPrestamosDevoluciones(sqlite3 *db) {
 
 		switch (opcion) {
 		case '1':
+			registrarPrestamo(db);
 			break;
 		case '2':
 			break;
@@ -621,4 +624,75 @@ void gestionarPrestamosDevoluciones(sqlite3 *db) {
 			printf("Opción no válida\n");
 		}
 	} while (1);
+}
+
+void registrarPrestamo(sqlite3 *db) {
+    Prestamo nuevoPrestamo;
+    printf("\n--- AGREGAR PRÉSTAMO ---\n");
+
+    // Solicitar datos del préstamo
+    printf("DNI del usuario: ");
+    fflush(stdout);
+    fgets(nuevoPrestamo.usuario_dni, sizeof(nuevoPrestamo.usuario_dni), stdin);
+    nuevoPrestamo.usuario_dni[strcspn(nuevoPrestamo.usuario_dni, "\n")] = 0;
+
+    printf("ID del libro: ");
+    fflush(stdout);
+    char input[20];
+    fgets(input, sizeof(input), stdin);
+    nuevoPrestamo.libro_id = atoi(input);
+
+    printf("Fecha de préstamo (YYYY-MM-DD): ");
+    fflush(stdout);
+    fgets(nuevoPrestamo.fecha_prestamo, sizeof(nuevoPrestamo.fecha_prestamo), stdin);
+    nuevoPrestamo.fecha_prestamo[strcspn(nuevoPrestamo.fecha_prestamo, "\n")] = 0;
+
+    // Buscar ID reciclado (opcional)
+    int idReciclado = -1;
+    sqlite3_stmt *stmtBuscarID;
+    const char *sqlBuscarID = "SELECT MIN(t1.id + 1) FROM Prestamo t1 LEFT JOIN Prestamo t2 ON t1.id + 1 = t2.id WHERE t2.id IS NULL;";
+
+    if (sqlite3_prepare_v2(db, sqlBuscarID, -1, &stmtBuscarID, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmtBuscarID) == SQLITE_ROW) {
+            idReciclado = sqlite3_column_int(stmtBuscarID, 0);
+        }
+    }
+    sqlite3_finalize(stmtBuscarID);
+
+    // Preparar la consulta de inserción
+    const char *sqlInsert = idReciclado > 0
+        ? "INSERT INTO Prestamo (id, usuario_dni, libro_id, fecha_Prestamo, fecha_Devolucion) VALUES (?, ?, ?, ?, ?);"
+        : "INSERT INTO Prestamo (usuario_dni, libro_id, fecha_Prestamo, fecha_Devolucion) VALUES (?, ?, ?, ?);";
+
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sqlInsert, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar inserción: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    // Vincular los valores
+    int bindIndex = 1;
+    if (idReciclado > 0) {
+        sqlite3_bind_int(stmt, bindIndex++, idReciclado);
+    }
+    sqlite3_bind_text(stmt, bindIndex++, nuevoPrestamo.usuario_dni, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, bindIndex++, nuevoPrestamo.libro_id);
+    sqlite3_bind_text(stmt, bindIndex++, nuevoPrestamo.fecha_prestamo, -1, SQLITE_STATIC);
+    
+    // Manejar fecha de devolución (puede ser NULL)
+    if (strlen(nuevoPrestamo.fecha_devolucion) > 0) {
+        sqlite3_bind_text(stmt, bindIndex, nuevoPrestamo.fecha_devolucion, -1, SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(stmt, bindIndex);
+    }
+
+    // Ejecutar la consulta
+    if (sqlite3_step(stmt) == SQLITE_DONE) {
+        printf("Préstamo agregado correctamente. ID: %I64d\n", 
+              (long long)(idReciclado > 0 ? idReciclado : sqlite3_last_insert_rowid(db)));
+    } else {
+        fprintf(stderr, "Error al agregar préstamo: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
 }
