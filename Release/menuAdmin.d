@@ -1,5 +1,5 @@
 menuAdmin.o: ../menuAdmin.c ../menuAdmin.h ../sqlite3.h ../usuario.h \
-  ../libro.h
+  ../libro.h ../prestamo.h ../bd.h
 
 ../menuAdmin.h:
 
@@ -8,3 +8,7 @@ menuAdmin.o: ../menuAdmin.c ../menuAdmin.h ../sqlite3.h ../usuario.h \
 ../usuario.h:
 
 ../libro.h:
+
+../prestamo.h:
+
+../bd.h:
