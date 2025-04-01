@@ -10,6 +10,7 @@ char menuUsuario();
 void leerContrasena(char *password);
 int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena);
 int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin);
+void registrar_prestamo_nuevo(sqlite3 *db);
 
 void menu_alquiler();
 #endif
