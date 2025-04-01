@@ -610,13 +610,10 @@ void gestionarPrestamosDevoluciones(sqlite3 *db) {
 
 		switch (opcion) {
 		case '1':
-			listarLibros(db);
 			break;
 		case '2':
-			agregarLibro(db);
 			break;
 		case '3':
-			eliminarLibro(db);
 			break;
 		case '0':
 			return;
