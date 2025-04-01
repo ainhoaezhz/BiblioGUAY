@@ -60,9 +60,9 @@ void gestionarInventarioLibros(sqlite3 *db) {
     char opcion;
     do {
         printf("\n--- GESTIÓN DE INVENTARIO DE LIBROS ---\n");
-        printf("a. Añadir nuevo libro\n");
-        printf("b. Editar información de un libro\n");
-        printf("c. Eliminar un libro\n");
+        printf("1. Añadir nuevo libro\n");
+        printf("2. Editar información de un libro\n");
+        printf("3. Eliminar un libro\n");
         printf("0. Volver\n");
         printf("Opción: ");
         fflush(stdout);
@@ -71,13 +71,13 @@ void gestionarInventarioLibros(sqlite3 *db) {
         while (getchar() != '\n');
 
         switch (opcion) {
-        case 'a':
+        case '1':
             agregarLibro(db);
             break;
-        case 'b':
+        case '2':
             editarLibro(db);
             break;
-        case 'c':
+        case '3':
             eliminarLibro(db);
             break;
         case '0':

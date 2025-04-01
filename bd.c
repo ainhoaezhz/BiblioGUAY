@@ -127,13 +127,6 @@ void insertarPrestamosBase(sqlite3 *db) {
         if (sqlite3_step(stmt) != SQLITE_DONE) {
             fprintf(stderr, "Error al insertar préstamo: %s\n", sqlite3_errmsg(db));
         } else {
-            if (sqlite3_changes(db) > 0) {
-                printf("Préstamo insertado: Usuario %s, Libro %d, Fecha %s\n",
-                       prestamos[i].usuario_dni, prestamos[i].libro_id, prestamos[i].fecha_prestamo);
-            } else {
-                printf("Préstamo duplicado omitido: Usuario %s, Libro %d, Fecha %s\n",
-                       prestamos[i].usuario_dni, prestamos[i].libro_id, prestamos[i].fecha_prestamo);
-            }
         }
         sqlite3_reset(stmt);
     }

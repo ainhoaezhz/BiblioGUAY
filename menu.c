@@ -20,63 +20,6 @@
 #define MAX 80
 #define MAX_STR 100
 
-void leerContrasena(char *password) {
-    int i = 0;
-    char ch;
-
-#ifdef _WIN32
-    while (1) {
-        ch = _getch();
-        if (ch == '\r' || ch == '\n') {
-            password[i] = '\0';
-            break;
-        } else if (ch == 8 || ch == 127) {
-            if (i > 0) {
-                i--;
-                printf("\b \b");
-                fflush(stdout);
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*");
-            fflush(stdout);
-        }
-    }
-#else
-    struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    while (1) {
-        ch = getchar();
-        if (ch == '\n' || ch == EOF) {
-            password[i] = '\0';
-            break;
-        } else if (ch == 8 || ch == 127) {
-            if (i > 0) {
-                i--;
-                printf("\b \b");
-                fflush(stdout);
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*");
-            fflush(stdout);
-        }
-    }
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-#endif
-
-    password[i] = '\0';
-    printf("\nContraseña ingresada correctamente.\n");
-    fflush(stdout);
-}
-
-
-
 char menuPrincipal() {
 	char opcion;
 
@@ -501,7 +444,6 @@ void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
     
     printf("\n--- PROCESO DE DEVOLUCIÓN DE LIBRO ---\n");
     
-    // 1. Obtener DNI del usuario a partir del nombre
     const char *sql_obtener_dni = "SELECT dni FROM Usuario WHERE nombre = ?;";
     
     if(sqlite3_prepare_v2(db, sql_obtener_dni, -1, &stmt, NULL) != SQLITE_OK) {
@@ -523,7 +465,6 @@ void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
     
     printf("Usuario encontrado: DNI %s\n", dni_usuario);
     
-    // 2. Mostrar préstamos activos del usuario (fecha_Devolucion IS NULL)
     printf("\nPréstamos activos:\n");
     printf("ID\tLibroID\tTítulo\t\tFecha Préstamo\n");
     
@@ -554,16 +495,14 @@ void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
         return;
     }
     
-    // 3. Solicitar ID del préstamo a devolver
     printf("\nIntroduzca el ID del préstamo que desea devolver: ");
     if(scanf("%d", &prestamo_id) != 1) {
         printf("Entrada inválida.\n");
-        while(getchar() != '\n'); // Limpiar buffer
+        while(getchar() != '\n'); 
         return;
     }
-    getchar(); // Limpiar el '\n' restante
+    getchar(); 
     
-    // 4. Verificar que el préstamo pertenece al usuario
     const char *sql_verificar = "SELECT libro_id FROM Prestamo WHERE id = ? AND usuario_dni = ?;";
     
     if(sqlite3_prepare_v2(db, sql_verificar, -1, &stmt, NULL) != SQLITE_OK) {
@@ -583,14 +522,12 @@ void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
     libro_id = sqlite3_column_int(stmt, 0);
     sqlite3_finalize(stmt);
     
-    // 5. Procesar la devolución (usar transacción)
     rc = sqlite3_exec(db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
     if(rc != SQLITE_OK) {
         fprintf(stderr, "Error al iniciar transacción: %s\n", sqlite3_errmsg(db));
         return;
     }
     
-    // Marcar préstamo como devuelto (establecer fecha_Devolucion)
     const char *sql_devolver = "UPDATE Prestamo SET fecha_Devolucion = date('now') WHERE id = ?;";
     
     if(sqlite3_prepare_v2(db, sql_devolver, -1, &stmt, NULL) != SQLITE_OK) {
@@ -609,7 +546,6 @@ void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
     }
     sqlite3_finalize(stmt);
     
-    // Marcar libro como disponible (estado = 1)
     const char *sql_actualizar_libro = "UPDATE Libro SET estado = 1 WHERE id = ?;";
     
     if(sqlite3_prepare_v2(db, sql_actualizar_libro, -1, &stmt, NULL) != SQLITE_OK) {
@@ -628,7 +564,6 @@ void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
     }
     sqlite3_finalize(stmt);
     
-    // Confirmar transacción
     rc = sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
     if(rc != SQLITE_OK) {
         fprintf(stderr, "Error al confirmar transacción: %s\n", sqlite3_errmsg(db));
