@@ -15,6 +15,7 @@ char menuAdministrador() {
 	printf("4. Listado de libros disponibles\n");
 	printf("5. Usuario con mas prestamos\n");
 	printf("6. Libro mas prestado\n");
+	printf("7. Gestionar devoluciones y prestamos\n");
 	printf("0. Salir\n");
 	printf("Elige una opción: ");
 	fflush(stdout);
@@ -48,6 +49,9 @@ void ejecutarMenuAdmin(sqlite3 *db) {
 			break;
 		case '6':
 			mostrarLibroMasPrestado(db);
+			break;
+		case '7':
+			gestionarPrestamosDevoluciones(db);
 			break;
 		case '0':
 			printf("Volviendo al menú principal...\n");
@@ -588,4 +592,36 @@ void mostrarUsuarioConMasPrestamos(sqlite3 *db) {
 	}
 
 	sqlite3_finalize(stmt);
+}
+
+void gestionarPrestamosDevoluciones(sqlite3 *db) {
+	char opcion;
+	do {
+		printf("\n--- GESTIÓN DE DEVOLUCIONES Y PRESTAMOS ---\n");
+		printf("1. Registrar prestamo\n");
+		printf("2. Registrar devolucion\n");
+		printf("3. Mostrar prestamos activos\n");
+		printf("0. Volver\n");
+		printf("Opción: ");
+		fflush(stdout);
+
+		scanf(" %c", &opcion);
+		while (getchar() != '\n');
+
+		switch (opcion) {
+		case '1':
+			listarLibros(db);
+			break;
+		case '2':
+			agregarLibro(db);
+			break;
+		case '3':
+			eliminarLibro(db);
+			break;
+		case '0':
+			return;
+		default:
+			printf("Opción no válida\n");
+		}
+	} while (1);
 }

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "libro.h"
+#include "prestamo.h"
 
 int inicializarBD(sqlite3 **db) {
 	int result;
@@ -86,6 +87,45 @@ void crearTablas(sqlite3 *db) {
         }
 
     insertarLibrosBase(db);
+    insertarPrestamosBase(db);
+
+
+}
+
+void insertarPrestamosBase(sqlite3 *db) {
+    sqlite3_stmt *stmt;
+    const char *sql = "INSERT INTO Prestamo (usuario_dni, libro_id, fecha_Prestamo, fecha_Devolucion) "
+                     "VALUES (?, ?, ?, ?);";
+
+    Prestamo prestamos[] = {
+        {"12345678A", 1, "2023-10-01", "2023-10-15"},
+        {"87654321B", 2, "2023-10-05", "2023-10-20"},
+        {"11223344C", 3, "2023-10-10", ""},  // NULL
+        {"12345678A", 4, "2023-11-01", "2023-11-10"}
+    };
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+
+    for (int i = 0; i < sizeof(prestamos) / sizeof(prestamos[0]); i++) {
+        sqlite3_bind_text(stmt, 1, prestamos[i].usuario_dni, -1, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 2, prestamos[i].libro_id);
+        sqlite3_bind_text(stmt, 3, prestamos[i].fecha_prestamo, -1, SQLITE_STATIC);
+        
+        if (strlen(prestamos[i].fecha_devolucion) > 0) {
+            sqlite3_bind_text(stmt, 4, prestamos[i].fecha_devolucion, -1, SQLITE_STATIC);
+        } else {
+            sqlite3_bind_null(stmt, 4);
+        }
+
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            fprintf(stderr, "Error al insertar préstamo: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_reset(stmt);
+    }
+    sqlite3_finalize(stmt);
 }
 
 void insertarLibrosBase(sqlite3 *db) {
