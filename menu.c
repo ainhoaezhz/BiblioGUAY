@@ -76,7 +76,6 @@ void iniciarSesion() {
 		} else {
 			printf(
 					"\nError: Usuario o contraseña incorrectos. Inténtelo de nuevo.\n");
-                    return;
 		}
 	} while (1);
 
