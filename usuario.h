@@ -1,11 +1,4 @@
-/*
- * usuario.h
- *
- *  Created on: 11 mar 2025
- *      Author: ainhoa
- */
-
- #ifndef USUARIO_H_
+#ifndef USUARIO_H_
  #define USUARIO_H_
  #include "sqlite3.h"
  

@@ -1,10 +1,3 @@
-/*
- * biblioteca.h
- *
- *  Created on: 5 mar 2025
- *      Author: Genesis
- */
-
 #ifndef BIBLIOTECA_H_
 #define BIBLIOTECA_H_
 
