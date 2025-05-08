@@ -10,6 +10,7 @@ C_SRCS += \
 ../main.c \
 ../menu.c \
 ../menuAdmin.c \
+../prestamo.c \
 ../sqlite3.c \
 ../usuario.c 
 
@@ -20,6 +21,7 @@ C_DEPS += \
 ./main.d \
 ./menu.d \
 ./menuAdmin.d \
+./prestamo.d \
 ./sqlite3.d \
 ./usuario.d 
 
@@ -30,6 +32,7 @@ OBJS += \
 ./main.o \
 ./menu.o \
 ./menuAdmin.o \
+./prestamo.o \
 ./sqlite3.o \
 ./usuario.o 
 
@@ -46,7 +49,7 @@ OBJS += \
 clean: clean--2e-
 
 clean--2e-:
-	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./menuAdmin.d ./menuAdmin.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
+	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./menuAdmin.d ./menuAdmin.o ./prestamo.d ./prestamo.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
 
 .PHONY: clean--2e-
 
