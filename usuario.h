@@ -1,9 +1,9 @@
 #ifndef USUARIO_H_
  #define USUARIO_H_
  #include "sqlite3.h"
-
+ 
  #define MAX_STR 100
-
+ 
  typedef struct {
      char nombre[MAX_STR];
      char apellidos[MAX_STR];
@@ -14,7 +14,7 @@
      char contrasena[MAX_STR];  // Agregado para almacenar la contraseña
      int es_Admin; //0=NO 1=SI
  } Usuario;
-
+ 
 
  void inicializarUsuario(Usuario *u, const char *nombre, const char *apellidos,
                           const char *dni, const char *direccion, const char *email,
@@ -22,8 +22,7 @@
 
  void mostrarUsuario(sqlite3 *db, const char *nombreUsuario);
  void editarUsuario(sqlite3 *db, char *nombreUsuario);
-
+ 
  void visualizarHistorial(sqlite3 *db, const char *dniUsuario);
-
+ 
  #endif /* USUARIO_H_ */
-
