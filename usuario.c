@@ -214,3 +214,5 @@ void visualizarHistorial(sqlite3 *db, const char *dniUsuario) {
     }
     sqlite3_finalize(stmt);
 }
+
+
