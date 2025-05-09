@@ -6,6 +6,8 @@
 #include "bd.h"
 #include "menuAdmin.h"
 #include "libro.h"
+#include <ctype.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #include <conio.h> //Windows
@@ -17,63 +19,6 @@
 
 #define MAX 80
 #define MAX_STR 100
-
-void leerContrasena(char *password) {
-    int i = 0;
-    char ch;
-
-#ifdef _WIN32
-    while (1) {
-        ch = _getch();
-        if (ch == '\r' || ch == '\n') {
-            password[i] = '\0';
-            break;
-        } else if (ch == 8 || ch == 127) {
-            if (i > 0) {
-                i--;
-                printf("\b \b");
-                fflush(stdout);
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*");
-            fflush(stdout);
-        }
-    }
-#else
-    struct termios oldt, newt;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    while (1) {
-        ch = getchar();
-        if (ch == '\n' || ch == EOF) {
-            password[i] = '\0';
-            break;
-        } else if (ch == 8 || ch == 127) {
-            if (i > 0) {
-                i--;
-                printf("\b \b");
-                fflush(stdout);
-            }
-        } else if (i < MAX - 1) {
-            password[i++] = ch;
-            printf("*");
-            fflush(stdout);
-        }
-    }
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-#endif
-
-    password[i] = '\0';
-    printf("\nContraseña ingresada correctamente.\n");
-    fflush(stdout);
-}
-
-
 
 char menuPrincipal() {
 	char opcion;
@@ -153,6 +98,7 @@ void iniciarSesion() {
 		    char titulo[MAX_NOMBRE];
 		    scanf("%29s", titulo);
 		    buscar_libros_por_titulo(db, titulo);
+			menu_alquiler();
 		    break;
 		case '4':
 			printf("Historial de préstamos...\n");
@@ -172,6 +118,8 @@ void iniciarSesion() {
 			break;
 		case '5':
 			printf("Devolviendo libros...\n");
+			devolver_libro(db, usuario);
+
 			break;
 		case '6':
 			printf("Listando libros disponibles...\n");
@@ -320,4 +268,309 @@ int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin) {
 
 	sqlite3_finalize(stmt);
 	return resultado;
+}
+
+
+void menu_alquiler() {
+    char opcion;
+    char respuesta;
+    
+    printf("\n=== MENÚ DE ALQUILER ===\n");
+    
+    do {
+        printf("\n¿Qué deseas hacer?\n");
+        printf("1. Alquilar libro\n");
+        printf("2. No alquilar\n");
+        printf("3. Volver atrás\n");
+        printf("Elige una opción (1-3): ");
+        
+        scanf(" %c", &opcion);
+        getchar();
+        
+        switch(opcion) {
+            case '1':
+                printf("\nProcediendo con el alquiler del libro...\n");
+                registrar_prestamo_nuevo(db);
+                printf("¡Libro alquilado con éxito!\n");
+                return;
+                
+            case '2':
+                printf("\nEntendido, no alquilarás ningún libro.\n");
+                
+                do {
+                    printf("¿Quieres volver al menú de alquiler? (s/n): ");
+                    scanf(" %c", &respuesta);
+                    getchar();
+                    
+                    respuesta = tolower(respuesta);
+                    
+                    if(respuesta == 's') break;
+                    if(respuesta == 'n') {
+                        printf("\nVolviendo al menú principal...\n");
+                        return;
+                    }
+                    printf("Opción no válida. ");
+                } while(1);
+                break;
+                
+            case '3':
+                printf("\nVolviendo al menú principal...\n");
+                return;
+                
+            default:
+                printf("\nOpción no válida. Por favor elige 1, 2 o 3.\n");
+        }
+    } while(1);
+}
+
+void registrar_prestamo_nuevo(sqlite3 *db) {
+    int libro_id;
+    char dni_usuario[20];
+    sqlite3_stmt *stmt;
+    int rc;
+    
+    printf("\n--- REGISTRO DE PRÉSTAMO ---\n");
+    
+    while(1) {
+        printf("Ingrese el ID del libro: ");
+        if(scanf("%d", &libro_id) != 1) {
+            printf("Error: Debe ingresar un número válido.\n");
+            while(getchar() != '\n');
+            continue;
+        }
+        getchar();
+        
+        const char *check_libro = "SELECT 1 FROM Libro WHERE id = ? AND estado = 1;";
+        if(sqlite3_prepare_v2(db, check_libro, -1, &stmt, NULL) != SQLITE_OK) {
+            printf("Error en la base de datos.\n");
+            return;
+        }
+        
+        sqlite3_bind_int(stmt, 1, libro_id);
+        if(sqlite3_step(stmt) == SQLITE_ROW) {
+            sqlite3_finalize(stmt);
+            break;
+        }
+        
+        printf("Libro no disponible o ID incorrecto. Intente nuevamente.\n");
+        sqlite3_finalize(stmt);
+    }
+    
+    while(1) {
+        printf("Ingrese el DNI del usuario: ");
+        if(fgets(dni_usuario, sizeof(dni_usuario), stdin) == NULL) {
+            printf("Error al leer entrada.\n");
+            continue;
+        }
+        
+        dni_usuario[strcspn(dni_usuario, "\n")] = '\0';
+        
+        const char *check_usuario = "SELECT 1 FROM Usuario WHERE dni = ?;";
+        if(sqlite3_prepare_v2(db, check_usuario, -1, &stmt, NULL) != SQLITE_OK) {
+            printf("Error en la base de datos.\n");
+            return;
+        }
+        
+        sqlite3_bind_text(stmt, 1, dni_usuario, -1, SQLITE_STATIC);
+        if(sqlite3_step(stmt) == SQLITE_ROW) {
+            sqlite3_finalize(stmt);
+            break;
+        }
+        
+        printf("Usuario no encontrado. Intente nuevamente.\n");
+        sqlite3_finalize(stmt);
+    }
+    
+    rc = sqlite3_exec(db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if(rc != SQLITE_OK) {
+        printf("Error al iniciar transacción: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    const char *insert_sql = "INSERT INTO Prestamo(usuario_dni, libro_id, fecha_Prestamo, fecha_Devolucion) "
+                           "VALUES(?, ?, date('now'), NULL);";
+    
+    if(sqlite3_prepare_v2(db, insert_sql, -1, &stmt, NULL) != SQLITE_OK) {
+        printf("Error al preparar inserción: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    sqlite3_bind_text(stmt, 1, dni_usuario, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, libro_id);
+    
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        printf("Error al insertar préstamo: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    
+    const char *update_sql = "UPDATE Libro SET estado = 0 WHERE id = ?;";
+    if(sqlite3_prepare_v2(db, update_sql, -1, &stmt, NULL) != SQLITE_OK) {
+        printf("Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, libro_id);
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        printf("Error al actualizar libro: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    
+    rc = sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+    if(rc != SQLITE_OK) {
+        printf("Error al confirmar transacción: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    printf("\n¡Préstamo registrado con éxito!\n");
+    printf("Libro ID: %d\nUsuario DNI: %s\n", libro_id, dni_usuario);
+}
+
+
+void devolver_libro(sqlite3 *db, const char *nombre_usuario) {
+    sqlite3_stmt *stmt;
+    char dni_usuario[20];
+    int prestamo_id;
+    int libro_id;
+    int rc;
+    
+    printf("\n--- PROCESO DE DEVOLUCIÓN DE LIBRO ---\n");
+    
+    const char *sql_obtener_dni = "SELECT dni FROM Usuario WHERE nombre = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_obtener_dni, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    sqlite3_bind_text(stmt, 1, nombre_usuario, -1, SQLITE_STATIC);
+    
+    if(sqlite3_step(stmt) != SQLITE_ROW) {
+        printf("No se encontró ningún usuario con el nombre '%s'.\n", nombre_usuario);
+        sqlite3_finalize(stmt);
+        return;
+    }
+    
+    strncpy(dni_usuario, (const char*)sqlite3_column_text(stmt, 0), sizeof(dni_usuario)-1);
+    dni_usuario[sizeof(dni_usuario)-1] = '\0';
+    sqlite3_finalize(stmt);
+    
+    printf("Usuario encontrado: DNI %s\n", dni_usuario);
+    
+    printf("\nPréstamos activos:\n");
+    printf("ID\tLibroID\tTítulo\t\tFecha Préstamo\n");
+    
+    const char *sql_prestamos = "SELECT p.id, p.libro_id, l.nombre, p.fecha_Prestamo "
+                               "FROM Prestamo p JOIN Libro l ON p.libro_id = l.id "
+                               "WHERE p.usuario_dni = ? AND p.fecha_Devolucion IS NULL;";
+    
+    if(sqlite3_prepare_v2(db, sql_prestamos, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al consultar préstamos: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    sqlite3_bind_text(stmt, 1, dni_usuario, -1, SQLITE_STATIC);
+    
+    bool tiene_prestamos = false;
+    while(sqlite3_step(stmt) == SQLITE_ROW) {
+        printf("%d\t%d\t%s\t%s\n", 
+              sqlite3_column_int(stmt, 0),
+              sqlite3_column_int(stmt, 1),
+              sqlite3_column_text(stmt, 2),
+              sqlite3_column_text(stmt, 3));
+        tiene_prestamos = true;
+    }
+    sqlite3_finalize(stmt);
+    
+    if(!tiene_prestamos) {
+        printf("El usuario no tiene préstamos activos.\n");
+        return;
+    }
+    
+    printf("\nIntroduzca el ID del préstamo que desea devolver: ");
+    if(scanf("%d", &prestamo_id) != 1) {
+        printf("Entrada inválida.\n");
+        while(getchar() != '\n'); 
+        return;
+    }
+    getchar(); 
+    
+    const char *sql_verificar = "SELECT libro_id FROM Prestamo WHERE id = ? AND usuario_dni = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_verificar, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, prestamo_id);
+    sqlite3_bind_text(stmt, 2, dni_usuario, -1, SQLITE_STATIC);
+    
+    if(sqlite3_step(stmt) != SQLITE_ROW) {
+        printf("El ID de préstamo no corresponde a este usuario.\n");
+        sqlite3_finalize(stmt);
+        return;
+    }
+    
+    libro_id = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    
+    rc = sqlite3_exec(db, "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "Error al iniciar transacción: %s\n", sqlite3_errmsg(db));
+        return;
+    }
+    
+    const char *sql_devolver = "UPDATE Prestamo SET fecha_Devolucion = date('now') WHERE id = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_devolver, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, prestamo_id);
+    
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        fprintf(stderr, "Error al actualizar préstamo: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    
+    const char *sql_actualizar_libro = "UPDATE Libro SET estado = 1 WHERE id = ?;";
+    
+    if(sqlite3_prepare_v2(db, sql_actualizar_libro, -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Error al preparar actualización: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    sqlite3_bind_int(stmt, 1, libro_id);
+    
+    if(sqlite3_step(stmt) != SQLITE_DONE) {
+        fprintf(stderr, "Error al actualizar libro: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    sqlite3_finalize(stmt);
+    
+    rc = sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+    if(rc != SQLITE_OK) {
+        fprintf(stderr, "Error al confirmar transacción: %s\n", sqlite3_errmsg(db));
+        sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+        return;
+    }
+    
+    printf("\n¡Devolución realizada con éxito!\n");
+    printf("Préstamo ID: %d\nLibro ID: %d\n", prestamo_id, libro_id);
 }

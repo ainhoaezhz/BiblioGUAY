@@ -11,6 +11,7 @@ C_SRCS += \
 ../main_servidor.c \
 ../menu.c \
 ../menuAdmin.c \
+../prestamo.c \
 ../sqlite3.c \
 ../usuario.c 
 
@@ -22,6 +23,7 @@ C_DEPS += \
 ./main_servidor.d \
 ./menu.d \
 ./menuAdmin.d \
+./prestamo.d \
 ./sqlite3.d \
 ./usuario.d 
 
@@ -33,6 +35,7 @@ OBJS += \
 ./main_servidor.o \
 ./menu.o \
 ./menuAdmin.o \
+./prestamo.o \
 ./sqlite3.o \
 ./usuario.o 
 
@@ -49,11 +52,7 @@ OBJS += \
 clean: clean--2e-
 
 clean--2e-:
-<<<<<<< HEAD
 	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./main_servidor.d ./main_servidor.o ./menu.d ./menu.o ./menuAdmin.d ./menuAdmin.o ./prestamo.d ./prestamo.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
-=======
-	-$(RM) ./bd.d ./bd.o ./biblioteca.d ./biblioteca.o ./libro.d ./libro.o ./main.d ./main.o ./menu.d ./menu.o ./menuAdmin.d ./menuAdmin.o ./sqlite3.d ./sqlite3.o ./usuario.d ./usuario.o
->>>>>>> parent of 570cbf7 (Merge branch 'master' of https://github.com/ainhoaezhz/BiblioGUAY)
 
 .PHONY: clean--2e-
 
