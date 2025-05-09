@@ -60,9 +60,9 @@ void gestionarInventarioLibros(sqlite3 *db) {
     char opcion;
     do {
         printf("\n--- GESTIÓN DE INVENTARIO DE LIBROS ---\n");
-        printf("1. Añadir nuevo libro\n");
-        printf("2. Editar información de un libro\n");
-        printf("3. Eliminar un libro\n");
+        printf("a. Añadir nuevo libro\n");
+        printf("b. Editar información de un libro\n");
+        printf("c. Eliminar un libro\n");
         printf("0. Volver\n");
         printf("Opción: ");
         fflush(stdout);
@@ -71,13 +71,13 @@ void gestionarInventarioLibros(sqlite3 *db) {
         while (getchar() != '\n');
 
         switch (opcion) {
-        case '1':
+        case 'a':
             agregarLibro(db);
             break;
-        case '2':
+        case 'b':
             editarLibro(db);
             break;
-        case '3':
+        case 'c':
             eliminarLibro(db);
             break;
         case '0':
@@ -563,7 +563,7 @@ void gestionarPrestamosDevoluciones(sqlite3 *db) {
             registrarDevolucion(db);
             break;
         case 'c':
-            mostrar_prestamos_activos(db);
+            mostrarPrestamosActivos(db);
             break;
         case '0':
             return;
@@ -709,50 +709,37 @@ void registrarDevolucion(sqlite3 *db) {
     sqlite3_finalize(stmt);
 }
 
-void mostrar_prestamos_activos(sqlite3 *db) {
-    if (db == NULL) {
-        printf("Error: Conexión a la base de datos no inicializada.\n");
-        return;
-    }
-
-    const char *sql =
-        "SELECT p.id, l.nombre, u.nombre, p.fecha_Prestamo, "
-        "CASE WHEN p.fecha_Devolucion IS NULL THEN 'Activo' ELSE 'Finalizado' END "
-        "FROM Prestamo p "
-        "LEFT JOIN Libro l ON p.libro_id = l.id "
-        "LEFT JOIN Usuario u ON p.usuario_dni = u.dni "
-        "WHERE p.fecha_Devolucion IS NULL "  // FILTRAR SOLO ACTIVOS
-        "ORDER BY p.fecha_Prestamo DESC;";
-
+void mostrarPrestamosActivos(sqlite3 *db) {
     sqlite3_stmt *stmt;
+    const char *sql = "SELECT p.id, u.nombre || ' ' || u.apellidos as usuario, "
+                     "l.nombre as libro, p.fecha_Prestamo "
+                     "FROM Prestamo p "
+                     "JOIN Usuario u ON p.usuario_dni = u.dni "
+                     "JOIN Libro l ON p.libro_id = l.id "
+                     "WHERE p.fecha_Devolucion IS NULL "
+                     "ORDER BY p.fecha_Prestamo;";
+
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        printf("Error preparando la consulta: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
         return;
     }
 
-    printf("\n%-4s | %-25s | %-15s | %-12s | %-10s\n",
-           "ID", "Libro", "Usuario", "F. Préstamo", "Estado");
-    printf("-----+---------------------------+-----------------+--------------+------------\n");
+    printf("\n--- PRÉSTAMOS ACTIVOS ---\n");
+    printf("%-5s %-30s %-30s %-12s\n", "ID", "USUARIO", "LIBRO", "PRÉSTAMO");
+    printf("----------------------------------------------------------------\n");
 
-    int total = 0;
+    int encontrados = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        total++;
-        int id = sqlite3_column_int(stmt, 0);
-        const char *libro = (const char *)sqlite3_column_text(stmt, 1);
-        const char *usuario = (const char *)sqlite3_column_text(stmt, 2);
-        const char *fecha_prestamo = (const char *)sqlite3_column_text(stmt, 3);
-        const char *estado = (const char *)sqlite3_column_text(stmt, 4);
-
-        printf("%-4d | %-25s | %-15s | %-12s | %-10s\n",
-               id,
-               libro ? libro : "Desconocido",
-               usuario ? usuario : "Desconocido",
-               fecha_prestamo ? fecha_prestamo : "N/A",
-               estado);
+        encontrados++;
+        printf("%-5d %-30s %-30s %-12s\n",
+               sqlite3_column_int(stmt, 0),
+               sqlite3_column_text(stmt, 1),
+               sqlite3_column_text(stmt, 2),
+               sqlite3_column_text(stmt, 3));
     }
 
-    if (total == 0) {
-        printf("\nNo hay préstamos activos en este momento.\n");
+    if (!encontrados) {
+        printf("No hay préstamos activos.\n");
     }
 
     sqlite3_finalize(stmt);
@@ -771,6 +758,7 @@ void generarInformes(sqlite3 *db) {
         printf("c. Usuarios con más préstamos\n");
         printf("d. Libro más prestado\n");
         printf("e. Préstamos vencidos\n");
+        printf("f. Gestionar devoluciones y préstamos\n");
         printf("0. Volver\n");
         printf("Opción: ");
         fflush(stdout);
@@ -792,7 +780,10 @@ void generarInformes(sqlite3 *db) {
             mostrarLibroMasPrestado(db);
             break;
         case 'e':
-            mostrar_prestamos_vencidos(db);
+            mostrarPrestamosVencidos(db);
+            break;
+        case 'f':
+            gestionarPrestamosDevoluciones(db);
             break;
         case '0':
             return;
@@ -906,54 +897,46 @@ void mostrarLibroMasPrestado(sqlite3 *db) {
     sqlite3_finalize(stmt);
 }
 
-void mostrar_prestamos_vencidos(sqlite3 *db) {
-    if (db == NULL) {
-        printf("Error: Conexión a la base de datos no inicializada.\n");
-        return;
-    }
-
-    // Consulta para seleccionar préstamos vencidos (con fecha de devolución)
-    const char *sql =
-        "SELECT p.id, l.nombre, u.nombre, p.fecha_Prestamo, p.fecha_Devolucion "
-        "FROM Prestamo p "
-        "LEFT JOIN Libro l ON p.libro_id = l.id "
-        "LEFT JOIN Usuario u ON p.usuario_dni = u.dni "
-        "WHERE p.fecha_Devolucion IS NOT NULL " // FILTRAR SOLO LOS QUE TIENEN FECHA DE DEVOLUCIÓN
-        "ORDER BY p.fecha_Prestamo DESC;";
-
+void mostrarPrestamosVencidos(sqlite3 *db) {
     sqlite3_stmt *stmt;
+    const char *sql = "SELECT p.id, u.nombre || ' ' || u.apellidos as usuario, "
+                     "l.nombre as libro, p.fecha_Prestamo, "
+                     "julianday('now') - julianday(p.fecha_Prestamo) as dias_vencidos "
+                     "FROM Prestamo p "
+                     "JOIN Usuario u ON p.usuario_dni = u.dni "
+                     "JOIN Libro l ON p.libro_id = l.id "
+                     "WHERE p.fecha_Devolucion IS NULL "
+                     "AND (julianday('now') - julianday(p.fecha_Prestamo)) > 15 "
+                     "ORDER BY dias_vencidos DESC;";
+
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        printf("Error preparando la consulta: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
         return;
     }
 
-    printf("\n%-4s | %-25s | %-15s | %-12s | %-12s\n",
-           "ID", "Libro", "Usuario", "F. Préstamo", "F. Devolución");
-    printf("-----+---------------------------+-----------------+--------------+--------------\n");
+    printf("\n--- PRÉSTAMOS VENCIDOS (más de 15 días) ---\n");
+    printf("%-5s %-30s %-30s %-12s %-10s\n",
+           "ID", "USUARIO", "LIBRO", "PRÉSTAMO", "DÍAS VENCIDOS");
+    printf("--------------------------------------------------------------------\n");
 
-    int total = 0;
+    int encontrados = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        total++;
-        int id = sqlite3_column_int(stmt, 0);
-        const char *libro = (const char *)sqlite3_column_text(stmt, 1);
-        const char *usuario = (const char *)sqlite3_column_text(stmt, 2);
-        const char *fecha_prestamo = (const char *)sqlite3_column_text(stmt, 3);
-        const char *fecha_devolucion = (const char *)sqlite3_column_text(stmt, 4);
-
-        printf("%-4d | %-25s | %-15s | %-12s | %-12s\n",
-               id,
-               libro ? libro : "Desconocido",
-               usuario ? usuario : "Desconocido",
-               fecha_prestamo ? fecha_prestamo : "N/A",
-               fecha_devolucion ? fecha_devolucion : "N/A");
+        encontrados++;
+        printf("%-5d %-30s %-30s %-12s %-10.0f\n",
+               sqlite3_column_int(stmt, 0),
+               sqlite3_column_text(stmt, 1),
+               sqlite3_column_text(stmt, 2),
+               sqlite3_column_text(stmt, 3),
+               sqlite3_column_double(stmt, 4));
     }
 
-    if (total == 0) {
-        printf("\nNo hay préstamos vencidos en este momento.\n");
+    if (!encontrados) {
+        printf("No hay préstamos vencidos.\n");
     }
 
     sqlite3_finalize(stmt);
 }
+
 void listarLibros(sqlite3 *db) {
     sqlite3_stmt *stmt;
     const char *sql =
