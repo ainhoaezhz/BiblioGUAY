@@ -21,12 +21,12 @@ void editarDatosUsuario(sqlite3 *db);
 void eliminarUsuario(sqlite3 *db);
 void registrarPrestamo(sqlite3 *db);
 void registrarDevolucion(sqlite3 *db);
-void mostrar_prestamos_activos(sqlite3 *db);
+void mostrarPrestamosActivos(sqlite3 *db);
 void verEstadisticas(sqlite3 *db);
 //void listarLibrosDisponibles(sqlite3 *db);
 void mostrarUsuarioConMasPrestamos(sqlite3 *db);
 void mostrarLibroMasPrestado(sqlite3 *db);
-void mostrar_prestamos_vencidos(sqlite3 *db);
+void mostrarPrestamosVencidos(sqlite3 *db);
 void listarLibros(sqlite3 *db);
 
 #endif
