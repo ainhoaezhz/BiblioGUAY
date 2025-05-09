@@ -1,5 +1,9 @@
 #include "libro.h"
+
 #include <stdio.h>
+
+Libro listaLibros[MAX_LIBROS];
+int numLibros = 0;
 
 void inicializarLibro(Libro *libro, const char *nombre, const char *autor,
 		const char *genero, int id, int estado) {
@@ -15,16 +19,12 @@ void inicializarLibro(Libro *libro, const char *nombre, const char *autor,
 
 	libro->id = id;
 	libro->estado = estado;
-
 }
 
 void mostrarLibro(const Libro *libro) {
-
 	printf("ID: %d\n", libro->id);
 	printf("Nombre: %s\n", libro->nombre);
 	printf("Autor: %s\n", libro->autor);
 	printf("Género: %s\n", libro->genero);
 	printf("Estado: %s\n", libro->estado ? "Disponible" : "No disponible");
-
 }
-
