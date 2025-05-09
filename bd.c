@@ -3,6 +3,8 @@
 #include <string.h>
 #include "libro.h"
 #include "prestamo.h"
+sqlite3 *db = NULL;
+
 
 int inicializarBD(sqlite3 **db) {
 	int result;
