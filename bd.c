@@ -218,7 +218,7 @@ void buscar_libros_por_titulo(sqlite3 *db,const char *titulo_buscar) {
     sqlite3_finalize(stmt);
 }
 
-void listarLibrosDisponiblesDB(sqlite3 *db) {
+void listarLibrosDisponibles(sqlite3 *db) {
 	sqlite3_stmt *stmt;
 	const char *sql = "SELECT id, nombre, autor, genero FROM Libro WHERE estado = 1 ORDER BY nombre;";
 
