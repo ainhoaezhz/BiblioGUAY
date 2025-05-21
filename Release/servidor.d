@@ -1,5 +1,4 @@
-servidor.o: ../servidor.c ../usuario.h ../sqlite3.h ../bd.h ../menu.h \
-  ../menuAdmin.h
+servidor.o: ../servidor.c ../usuario.h ../sqlite3.h ../bd.h ../libro.h
 
 ../usuario.h:
 
@@ -7,6 +6,4 @@ servidor.o: ../servidor.c ../usuario.h ../sqlite3.h ../bd.h ../menu.h \
 
 ../bd.h:
 
-../menu.h:
-
-../menuAdmin.h:
+../libro.h:

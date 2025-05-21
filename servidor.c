@@ -10,11 +10,12 @@
 #include "bd.h"
 #include "menu.h"
 #include "libro.h"
-#include "menuAdmin.h"
 #include "sqlite3.h"
 
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 6033
+#define SERVER_PORT 6035
+#define MAX 80
+
 
 // Prototipos de funciones socket para el servidor
 //admin
@@ -43,6 +44,50 @@ void buscarLibroSocket(sqlite3 *db, int socket, char *titulo);
 void mostrarHistorialPrestamosSocket(sqlite3 *db, int socket, char *datos);
 void devolverLibroSocket(sqlite3 *db, int socket, char *idPrestamoStr);
 
+int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
+	sqlite3_stmt *stmt;
+	char sql[MAX];
+
+	snprintf(sql, sizeof(sql),
+			"SELECT 1 FROM Usuario WHERE nombre = ? AND contrasena = ?;");
+
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar la consulta: %s\n",
+				sqlite3_errmsg(db));
+		return 0;
+	}
+
+	sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, contrasena, -1, SQLITE_STATIC);
+
+	int autenticado = (sqlite3_step(stmt) == SQLITE_ROW);
+
+	sqlite3_finalize(stmt);
+	return autenticado;
+}
+
+int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin) {
+	sqlite3_stmt *stmt;
+	const char *sql = "SELECT es_Admin FROM Usuario WHERE nombre = ?;";
+
+	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+		fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
+		return 0;
+	}
+
+	sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
+
+	int resultado = 0;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		*esAdmin = sqlite3_column_int(stmt, 0);
+		resultado = 1;
+	} else {
+		printf("Usuario no encontrado.\n");
+	}
+
+	sqlite3_finalize(stmt);
+	return resultado;
+}
 
 int main(int argc, char *argv[]) {
 
@@ -237,7 +282,8 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-//Ejemplo de función modificada para recibir datos ya parseados
+
+
 void agregarLibroSocket(sqlite3 *db, int socket, char *datos) {
     char *titulo = strtok(datos, "|");
     char *autor = strtok(NULL, "|");
