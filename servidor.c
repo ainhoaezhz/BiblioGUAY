@@ -13,11 +13,10 @@
 #include "sqlite3.h"
 
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 6035
+#define SERVER_PORT 6042
 #define MAX 80
 
 
-// Prototipos de funciones socket para el servidor
 //admin
 void listarLibrosSocket(sqlite3 *db, int socket);
 void agregarLibroSocket(sqlite3 *db, int socket, char *datos);
@@ -91,8 +90,8 @@ int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin) {
 
 int main(int argc, char *argv[]) {
 
-	int conn_socket; //el que lleva la conexion
-	int comm_socket; //el que lo comunica
+	int conn_socket;
+	int comm_socket;
 	sqlite3 *db = NULL;
 
 	if (inicializarBD(&db) != SQLITE_OK) {
@@ -100,13 +99,13 @@ int main(int argc, char *argv[]) {
 	    return 1;
 	}
 
-	crearTablas(db);  // opcional, si es la primera vez que se lanza
+	crearTablas(db);
 
 	struct sockaddr_in server;
 	struct sockaddr_in client;
 	//char sendBuff[512], recvBuff[512]; // lo que yo envio, lo que yo recibo
 
-	printf("\nInitialising...\n"); // No hay WSAStartup en Unix
+	printf("\nInitialising...\n");
 	printf("Initialised.\n");
 
 	//SOCKET creation
@@ -154,8 +153,7 @@ int main(int argc, char *argv[]) {
 
 	int fin = 0;
 	do {
-		/*EMPIEZA EL PROGRAMA DEL SERVIDOR*/
-		// PROGRAMA DEL SERVIDOR AQUÍ
+		//lógica del servidor
 
 		while (1) {
 		    char buffer[1024];
@@ -170,7 +168,7 @@ int main(int argc, char *argv[]) {
 
 		    // Separar el comando
 		    char *comando = strtok(buffer, "|");
-		    char *datos = buffer + strlen(comando) + 1; // Apunta a datos después de comando y '|', si existen
+		    char *datos = buffer + strlen(comando) + 1;
 
 		    if (strcmp(comando, "LOGIN") == 0) {
 		   	        char *usuario = datos;
@@ -195,8 +193,8 @@ int main(int argc, char *argv[]) {
 		   	        }
 
 
-		        //LIBROS
-		    } else if (strcmp(comando, "LISTAR_LIBROS") == 0) {
+		   	        //LIBROS
+		    		} else if (strcmp(comando, "LISTAR_LIBROS") == 0) {
 		    	        listarLibrosSocket(db, comm_socket);
 
 		    	    } else if (strcmp(comando, "SALIR") == 0) {
@@ -212,9 +210,9 @@ int main(int argc, char *argv[]) {
 		    	    } else if (strcmp(comando, "ELIMINAR_LIBRO") == 0) {
 		    	        eliminarLibroSocket(db, comm_socket, datos);
 
-		    }
+		    	    }
 
-		    //USUARIOS
+		    		//USUARIOS
 		    	    else if (strcmp(comando, "REGISTRAR_USUARIO") == 0) {
 		    	    	registrarNuevoUsuarioSocket(db, comm_socket, datos);
 
@@ -225,54 +223,54 @@ int main(int argc, char *argv[]) {
 		    	    	  eliminarUsuarioSocket(db, comm_socket, datos);
 		    	    }
 
-		    // Préstamos y devoluciones
+		    		// Préstamos y devoluciones
 		    	   else if (strcmp(comando, "REGISTRAR_PRESTAMO") == 0) {
 		    	   	   registrarPrestamoSocket(db, comm_socket, datos);
 
 		    	   } else if (strcmp(comando, "REGISTRAR_DEVOLUCION") == 0) {
 		    	   	   registrarDevolucionSocket(db, comm_socket, datos);
 
-		    	   	} else if (strcmp(comando, "MOSTRAR_PRESTAMOS_ACTIVOS") == 0) {
+		    	   } else if (strcmp(comando, "MOSTRAR_PRESTAMOS_ACTIVOS") == 0) {
 		    	   	   mostrarPrestamosActivosSocket(db, comm_socket);
-		    }
+		    	   }
 
-		    // Informes
-		    else if (strcmp(comando, "ESTADISTICAS") == 0) {
-		        verEstadisticasSocket(db, comm_socket);
-		    }
-		    else if (strcmp(comando, "USUARIO_TOP") == 0) {
-		        mostrarUsuarioConMasPrestamosSocket(db, comm_socket);
-		    }
-		    else if (strcmp(comando, "LIBRO_TOP") == 0) {
-		        mostrarLibroMasPrestadoSocket(db, comm_socket);
-		    }
-		    else if (strcmp(comando, "PRESTAMOS_VENCIDOS") == 0) {
-		        mostrarPrestamosVencidosSocket(db, comm_socket);
-		    }
+		    		// Informes
+					else if (strcmp(comando, "ESTADISTICAS") == 0) {
+						verEstadisticasSocket(db, comm_socket);
+					}
+					else if (strcmp(comando, "USUARIO_TOP") == 0) {
+						mostrarUsuarioConMasPrestamosSocket(db, comm_socket);
+					}
+					else if (strcmp(comando, "LIBRO_TOP") == 0) {
+						mostrarLibroMasPrestadoSocket(db, comm_socket);
+					}
+					else if (strcmp(comando, "PRESTAMOS_VENCIDOS") == 0) {
+						mostrarPrestamosVencidosSocket(db, comm_socket);
+					}
 
-		    else if (strcmp(comando, "VER_PERFIL") == 0) {
+		    		//de usuario
+		    		else if (strcmp(comando, "VER_PERFIL") == 0) {
 		            verPerfilSocket(db, comm_socket, datos);
-		        }
-		        else if (strcmp(comando, "EDITAR_PERFIL") == 0) {
-		            editarPerfilSocket(db, comm_socket, datos);
-		        }
-		        else if (strcmp(comando, "BUSCAR_LIBRO") == 0) {
-		            buscarLibroSocket(db, comm_socket, datos);
-		        }
-		        else if (strcmp(comando, "HISTORIAL") == 0) {
-		            mostrarHistorialPrestamosSocket(db, comm_socket, datos);
-		        }
+					}
+					else if (strcmp(comando, "EDITAR_PERFIL") == 0) {
+						editarPerfilSocket(db, comm_socket, datos);
+					}
+					else if (strcmp(comando, "BUSCAR_LIBRO") == 0) {
+						buscarLibroSocket(db, comm_socket, datos);
+					}
+					else if (strcmp(comando, "HISTORIAL") == 0) {
+						mostrarHistorialPrestamosSocket(db, comm_socket, datos);
+					}
 
-		        else if (strcmp(comando, "DEVOLVER") == 0) {
-		            devolverLibroSocket(db, comm_socket, datos);
-		        }
+					else if (strcmp(comando, "DEVOLVER") == 0) {
+						devolverLibroSocket(db, comm_socket, datos);
+					}
 
 		    else {
 		        send(comm_socket, "ERROR|Comando no reconocido", 28, 0);
 		    }
 		}
-
-		/*ACABA EL PROGRAMA DEL SERVIDOR*/
+		//hasta aquí
 
 	} while (fin == 0);
 
@@ -300,7 +298,6 @@ void agregarLibroSocket(sqlite3 *db, int socket, char *datos) {
     strncpy(nuevoLibro.genero, genero, sizeof(nuevoLibro.genero) - 1);
     nuevoLibro.estado = 1;
 
-    // Buscar ID reciclado
     int idReciclado = -1;
     sqlite3_stmt *stmtBuscarID;
     const char *sqlBuscarID = "SELECT MIN(t1.id + 1) FROM Libro t1 LEFT JOIN Libro t2 ON t1.id + 1 = t2.id WHERE t2.id IS NULL;";
@@ -340,9 +337,6 @@ void agregarLibroSocket(sqlite3 *db, int socket, char *datos) {
 }
 
 void editarLibroSocket(sqlite3 *db, int socket, char *datos) {
-    // Recibimos datos concatenados: "ID|NuevoTitulo|NuevoAutor|NuevoGenero"
-    // Si algún campo está vacío, no se cambia.
-
     char *idStr = strtok(datos, "|");
     char *nuevoTitulo = strtok(NULL, "|");
     char *nuevoAutor = strtok(NULL, "|");
@@ -355,7 +349,6 @@ void editarLibroSocket(sqlite3 *db, int socket, char *datos) {
 
     int idLibro = atoi(idStr);
 
-    // Verificar que el libro existe
     sqlite3_stmt *stmt;
     const char *sqlVerificar = "SELECT nombre, autor, genero FROM Libro WHERE id = ?;";
 
@@ -407,8 +400,6 @@ void editarLibroSocket(sqlite3 *db, int socket, char *datos) {
 }
 
 void eliminarLibroSocket(sqlite3 *db, int socket, char *datos) {
-    // Recibimos: ID libro a eliminar (string con el ID)
-
     if (!datos) {
         send(socket, "ERROR|No se recibió ID", 22, 0);
         return;
@@ -436,9 +427,6 @@ void eliminarLibroSocket(sqlite3 *db, int socket, char *datos) {
 }
 
 void listarLibrosSocket(sqlite3 *db, int socket) {
-    // Enviamos toda la lista de libros concatenada, separada por líneas.
-    // Formato de cada línea: id|nombre|autor|genero|estado\n
-
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id, nombre, autor, genero, estado FROM Libro ORDER BY id;";
 
@@ -469,7 +457,6 @@ void listarLibrosSocket(sqlite3 *db, int socket) {
 
 
 void registrarNuevoUsuarioSocket(sqlite3 *db, int socket, char *datos) {
-    // datos: "nombre|apellidos|dni|direccion|email|telefono|contrasena"
     char *nombre = strtok(datos, "|");
     char *apellidos = strtok(NULL, "|");
     char *dni = strtok(NULL, "|");
@@ -510,15 +497,15 @@ void registrarNuevoUsuarioSocket(sqlite3 *db, int socket, char *datos) {
 }
 
 void editarDatosUsuarioSocket(sqlite3 *db, int socket, char *datos) {
-    // datos: "dni|campo|nuevoValor"
-    char *dni = strtok(datos, "|");
-    char *campo = strtok(NULL, "|");
-    char *nuevoValor = strtok(NULL, "|");
+	char *usuario = strtok(datos, "|");
+	char *campo = strtok(NULL, "|");
+	char *nuevoValor = strtok(NULL, "|");
 
-    if (!dni || !campo || !nuevoValor) {
-        send(socket, "ERROR|Datos incompletos", 22, 0);
-        return;
-    }
+	if (!usuario || !campo || !nuevoValor) {
+	    send(socket, "ERROR|Datos incompletos", 24, 0);
+	    return;
+	}
+
 
     const char *sql_template = "UPDATE Usuario SET %s = ? WHERE dni = ?;";
     char sql[256];
@@ -542,7 +529,7 @@ void editarDatosUsuarioSocket(sqlite3 *db, int socket, char *datos) {
     }
 
     sqlite3_bind_text(stmt, 1, nuevoValor, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, dni, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, usuario, -1, SQLITE_STATIC);
 
     if (sqlite3_step(stmt) == SQLITE_DONE) {
         send(socket, "OK|Usuario actualizado", 22, 0);
@@ -554,7 +541,6 @@ void editarDatosUsuarioSocket(sqlite3 *db, int socket, char *datos) {
 }
 
 void eliminarUsuarioSocket(sqlite3 *db, int socket, char *datos) {
-    // datos: "dni"
     if (!datos) {
         send(socket, "ERROR|No se recibió DNI", 22, 0);
         return;
@@ -607,7 +593,6 @@ void eliminarUsuarioSocket(sqlite3 *db, int socket, char *datos) {
 
 
 void registrarPrestamoSocket(sqlite3 *db, int socket, char *datos) {
-    // datos: "dni_usuario|id_libro"
     char *dni = strtok(datos, "|");
     char *idLibroStr = strtok(NULL, "|");
     if (!dni || !idLibroStr) {
@@ -617,7 +602,6 @@ void registrarPrestamoSocket(sqlite3 *db, int socket, char *datos) {
 
     int idLibro = atoi(idLibroStr);
 
-    // Verificar si libro está disponible (estado=1)
     sqlite3_stmt *stmt;
     const char *sqlCheck = "SELECT estado FROM Libro WHERE id = ?;";
     if (sqlite3_prepare_v2(db, sqlCheck, -1, &stmt, NULL) != SQLITE_OK) {
@@ -637,8 +621,7 @@ void registrarPrestamoSocket(sqlite3 *db, int socket, char *datos) {
         return;
     }
 
-    // Insertar préstamo
-    const char *sqlInsert = "INSERT INTO Prestamo (dni, id_libro, fecha_Prestamo) VALUES (?, ?, datetime('now'));";
+    const char *sqlInsert = "INSERT INTO Prestamo (usuario_dni, libro_id, fecha_Prestamo) VALUES (?, ?, datetime('now'));";
     if (sqlite3_prepare_v2(db, sqlInsert, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar inserción", 33, 0);
         return;
@@ -653,7 +636,6 @@ void registrarPrestamoSocket(sqlite3 *db, int socket, char *datos) {
     }
     sqlite3_finalize(stmt);
 
-    // Actualizar estado libro a 0 (prestado)
     const char *sqlUpdateLibro = "UPDATE Libro SET estado = 0 WHERE id = ?;";
     if (sqlite3_prepare_v2(db, sqlUpdateLibro, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar actualización", 36, 0);
@@ -671,7 +653,6 @@ void registrarPrestamoSocket(sqlite3 *db, int socket, char *datos) {
 }
 
 void registrarDevolucionSocket(sqlite3 *db, int socket, char *datos) {
-    // datos: "dni_usuario|id_libro"
     char *dni = strtok(datos, "|");
     char *idLibroStr = strtok(NULL, "|");
     if (!dni || !idLibroStr) {
@@ -681,9 +662,8 @@ void registrarDevolucionSocket(sqlite3 *db, int socket, char *datos) {
 
     int idLibro = atoi(idLibroStr);
 
-    // Buscar préstamo activo para dni y libro
     sqlite3_stmt *stmt;
-    const char *sqlCheck = "SELECT id FROM Prestamo WHERE dni = ? AND id_libro = ? AND fecha_Devolucion IS NULL;";
+    const char *sqlCheck = "SELECT id FROM Prestamo WHERE usuario_dni = ? AND libro_id = ? AND fecha_Devolucion IS NULL;";
     if (sqlite3_prepare_v2(db, sqlCheck, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar consulta", 33, 0);
         return;
@@ -702,7 +682,6 @@ void registrarDevolucionSocket(sqlite3 *db, int socket, char *datos) {
         return;
     }
 
-    // Actualizar fecha_Devolucion
     const char *sqlUpdatePrestamo = "UPDATE Prestamo SET fecha_Devolucion = datetime('now') WHERE id = ?;";
     if (sqlite3_prepare_v2(db, sqlUpdatePrestamo, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar actualización", 36, 0);
@@ -717,7 +696,6 @@ void registrarDevolucionSocket(sqlite3 *db, int socket, char *datos) {
     }
     sqlite3_finalize(stmt);
 
-    // Actualizar estado libro a 1 (disponible)
     const char *sqlUpdateLibro = "UPDATE Libro SET estado = 1 WHERE id = ?;";
     if (sqlite3_prepare_v2(db, sqlUpdateLibro, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar actualización", 36, 0);
@@ -736,7 +714,7 @@ void registrarDevolucionSocket(sqlite3 *db, int socket, char *datos) {
 
 void mostrarPrestamosActivosSocket(sqlite3 *db, int socket) {
     sqlite3_stmt *stmt;
-    const char *sql = "SELECT id, dni, id_libro, fecha_Prestamo FROM Prestamo WHERE fecha_Devolucion IS NULL ORDER BY fecha_Prestamo;";
+    const char *sql = "SELECT id, usuario_dni, libro_id, fecha_Prestamo FROM Prestamo WHERE fecha_Devolucion IS NULL ORDER BY fecha_Prestamo;";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error al listar préstamos activos", 37, 0);
@@ -861,7 +839,6 @@ void verEstadisticasSocket(sqlite3 *db, int socket) {
         sqlite3_finalize(stmt);
     }
 
-    // Total libros
     sql = "SELECT COUNT(*) FROM Libro;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -871,7 +848,6 @@ void verEstadisticasSocket(sqlite3 *db, int socket) {
         sqlite3_finalize(stmt);
     }
 
-    // Libros prestados
     sql = "SELECT COUNT(*) FROM Libro WHERE estado = 0;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -881,7 +857,6 @@ void verEstadisticasSocket(sqlite3 *db, int socket) {
         sqlite3_finalize(stmt);
     }
 
-    // Préstamos activos
     sql = "SELECT COUNT(*) FROM Prestamo WHERE fecha_Devolucion IS NULL;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -937,7 +912,6 @@ void editarPerfilSocket(sqlite3 *db, int socket, char *datos) {
         return;
     }
 
-    // Validar campo permitido
     if (strcmp(campo, "nombre") != 0 &&
         strcmp(campo, "apellidos") != 0 &&
         strcmp(campo, "direccion") != 0 &&
@@ -983,7 +957,6 @@ void buscarLibroSocket(sqlite3 *db, int socket, char *datos) {
         return;
     }
 
-    // Construir patrón con % para LIKE
     char patron[256];
     snprintf(patron, sizeof(patron), "%%%s%%", datos);
     sqlite3_bind_text(stmt, 1, patron, -1, SQLITE_STATIC);
@@ -1021,7 +994,7 @@ void mostrarHistorialPrestamosSocket(sqlite3 *db, int socket, char *datos) {
     const char *sql =
         "SELECT id, id_libro, fecha_Prestamo, "
         "IFNULL(fecha_Devolucion, 'No devuelto') "
-        "FROM Prestamo WHERE dni = ? ORDER BY fecha_Prestamo DESC;";
+        "FROM Prestamo WHERE usuario_dni = ? ORDER BY fecha_Prestamo DESC;";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error al preparar consulta BD", 33, 0);
@@ -1066,7 +1039,7 @@ void devolverLibroSocket(sqlite3 *db, int socket, char *datos) {
     }
 
     sqlite3_stmt *stmt;
-    const char *sqlBuscarPrestamo = "SELECT id_libro FROM Prestamo WHERE id = ? AND fecha_Devolucion IS NULL;";
+    const char *sqlBuscarPrestamo = "SELECT libro_id FROM Prestamo WHERE id = ? AND fecha_Devolucion IS NULL;";
 
     if (sqlite3_prepare_v2(db, sqlBuscarPrestamo, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar consulta", 33, 0);
@@ -1086,7 +1059,6 @@ void devolverLibroSocket(sqlite3 *db, int socket, char *datos) {
         return;
     }
 
-    // Actualizar fecha_Devolucion del préstamo
     const char *sqlActualizarPrestamo = "UPDATE Prestamo SET fecha_Devolucion = datetime('now') WHERE id = ?;";
     if (sqlite3_prepare_v2(db, sqlActualizarPrestamo, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar actualización préstamo", 44, 0);
@@ -1100,7 +1072,6 @@ void devolverLibroSocket(sqlite3 *db, int socket, char *datos) {
     }
     sqlite3_finalize(stmt);
 
-    // Actualizar estado del libro a disponible (1)
     const char *sqlActualizarLibro = "UPDATE Libro SET estado = 1 WHERE id = ?;";
     if (sqlite3_prepare_v2(db, sqlActualizarLibro, -1, &stmt, NULL) != SQLITE_OK) {
         send(socket, "ERROR|Error BD preparar actualización libro", 40, 0);
