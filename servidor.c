@@ -13,7 +13,8 @@
 #include "sqlite3.h"
 
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 6042
+#define SERVER_PORT 6082
+
 #define MAX 80
 
 
@@ -43,20 +44,16 @@ void buscarLibroSocket(sqlite3 *db, int socket, char *titulo);
 void mostrarHistorialPrestamosSocket(sqlite3 *db, int socket, char *datos);
 void devolverLibroSocket(sqlite3 *db, int socket, char *idPrestamoStr);
 
-int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
+int verificarSesion(sqlite3 *db, const char *dni, const char *contrasena) {
 	sqlite3_stmt *stmt;
-	char sql[MAX];
-
-	snprintf(sql, sizeof(sql),
-			"SELECT 1 FROM Usuario WHERE nombre = ? AND contrasena = ?;");
+	const char *sql = "SELECT 1 FROM Usuario WHERE dni = ? AND contrasena = ?;";
 
 	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-		fprintf(stderr, "Error al preparar la consulta: %s\n",
-				sqlite3_errmsg(db));
+		fprintf(stderr, "Error al preparar la consulta: %s\n", sqlite3_errmsg(db));
 		return 0;
 	}
 
-	sqlite3_bind_text(stmt, 1, usuario, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 1, dni, -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, contrasena, -1, SQLITE_STATIC);
 
 	int autenticado = (sqlite3_step(stmt) == SQLITE_ROW);
@@ -65,9 +62,10 @@ int verificarSesion(sqlite3 *db, const char *usuario, const char *contrasena) {
 	return autenticado;
 }
 
+
 int autenticarUsuario(sqlite3 *db, char *dni, int *esAdmin) {
 	sqlite3_stmt *stmt;
-	const char *sql = "SELECT es_Admin FROM Usuario WHERE nombre = ?;";
+	const char *sql = "SELECT es_Admin FROM Usuario WHERE dni = ?;";
 
 	if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
 		fprintf(stderr, "Error al preparar consulta: %s\n", sqlite3_errmsg(db));
@@ -741,15 +739,15 @@ void mostrarPrestamosActivosSocket(sqlite3 *db, int socket) {
 void mostrarUsuarioConMasPrestamosSocket(sqlite3 *db, int socket) {
     sqlite3_stmt *stmt;
     const char *sql =
-        "SELECT dni, nombre, COUNT(*) AS total_prestamos "
+        "SELECT Usuario.dni, Usuario.nombre, COUNT(*) AS total_prestamos "
         "FROM Usuario "
-        "JOIN Prestamo ON Usuario.dni = Prestamo.dni "
+        "JOIN Prestamo ON Usuario.dni = Prestamo.usuario_dni "
         "GROUP BY Usuario.dni "
         "ORDER BY total_prestamos DESC "
         "LIMIT 1;";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        send(socket, "ERROR|Error al obtener usuario top", 32, 0);
+        send(socket, "ERROR|Error al obtener usuario top", 33, 0);
         return;
     }
 
@@ -761,23 +759,25 @@ void mostrarUsuarioConMasPrestamosSocket(sqlite3 *db, int socket) {
                  sqlite3_column_int(stmt, 2));
         send(socket, respuesta, strlen(respuesta), 0);
     } else {
-        send(socket, "ERROR|No se encontró usuario", 27, 0);
+        send(socket, "ERROR|No se encontró usuario", 28, 0);
     }
+
     sqlite3_finalize(stmt);
 }
+
 
 void mostrarLibroMasPrestadoSocket(sqlite3 *db, int socket) {
     sqlite3_stmt *stmt;
     const char *sql =
         "SELECT Libro.id, Libro.nombre, COUNT(*) AS total_prestamos "
         "FROM Libro "
-        "JOIN Prestamo ON Libro.id = Prestamo.id_libro "
+        "JOIN Prestamo ON Libro.id = Prestamo.libro_id "
         "GROUP BY Libro.id "
         "ORDER BY total_prestamos DESC "
         "LIMIT 1;";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        send(socket, "ERROR|Error al obtener libro top", 30, 0);
+        send(socket, "ERROR|Error al obtener libro top", 31, 0);
         return;
     }
 
@@ -789,21 +789,23 @@ void mostrarLibroMasPrestadoSocket(sqlite3 *db, int socket) {
                  sqlite3_column_int(stmt, 2));
         send(socket, respuesta, strlen(respuesta), 0);
     } else {
-        send(socket, "ERROR|No se encontró libro", 25, 0);
+        send(socket, "ERROR|No se encontró libro", 26, 0);
     }
+
     sqlite3_finalize(stmt);
 }
+
 
 void mostrarPrestamosVencidosSocket(sqlite3 *db, int socket) {
     sqlite3_stmt *stmt;
     const char *sql =
-        "SELECT id, dni, id_libro, fecha_Prestamo "
-        "FROM Prestamo "
-        "WHERE fecha_Devolucion IS NULL AND fecha_Prestamo <= datetime('now', '-30 days') "
-        "ORDER BY fecha_Prestamo;";
+        "SELECT p.id, p.usuario_dni, p.libro_id, p.fecha_Prestamo "
+        "FROM Prestamo p "
+        "WHERE p.fecha_Devolucion IS NULL AND p.fecha_Prestamo <= datetime('now', '-30 days') "
+        "ORDER BY p.fecha_Prestamo;";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
-        send(socket, "ERROR|Error al listar préstamos vencidos", 38, 0);
+        send(socket, "ERROR|Error al listar préstamos vencidos", 40, 0);
         return;
     }
 
@@ -819,10 +821,16 @@ void mostrarPrestamosVencidosSocket(sqlite3 *db, int socket) {
                  (const char*)sqlite3_column_text(stmt, 3));
         strncat(buffer, linea, sizeof(buffer) - strlen(buffer) - 1);
     }
+
     sqlite3_finalize(stmt);
 
-    send(socket, buffer, strlen(buffer), 0);
+    if (strlen(buffer) == 0) {
+        send(socket, "ERROR|No hay préstamos vencidos", 31, 0);
+    } else {
+        send(socket, buffer, strlen(buffer), 0);
+    }
 }
+
 
 void verEstadisticasSocket(sqlite3 *db, int socket) {
     char buffer[512];
@@ -992,7 +1000,7 @@ void mostrarHistorialPrestamosSocket(sqlite3 *db, int socket, char *datos) {
 
     sqlite3_stmt *stmt;
     const char *sql =
-        "SELECT id, id_libro, fecha_Prestamo, "
+        "SELECT id, libro_id, fecha_Prestamo, "
         "IFNULL(fecha_Devolucion, 'No devuelto') "
         "FROM Prestamo WHERE usuario_dni = ? ORDER BY fecha_Prestamo DESC;";
 
